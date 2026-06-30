@@ -9,11 +9,12 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
 
     <!--
-      Content-Security-Policy is enforced via HTTP response headers at the host (see client/README.md
-      for the exact directive string and an nginx example). It is NOT set as a <meta> here because a
-      meta CSP cannot express frame-ancestors and would also break the dev server's HMR. The app is
-      built to satisfy a strict policy: no inline scripts, and no component-inline styles (the UI kit is
-      Tailwind utility classes only), so script-src/style-src need no 'unsafe-inline'.
+      Content-Security-Policy is enforced via HTTP response headers at the host (see README.md
+      "Deployment & security headers" for the exact directive string and deploy/nginx.conf.sample). It is
+      NOT set as a <meta> here because a meta CSP cannot express frame-ancestors and would also break the
+      dev server's HMR. script-src is 'self' (AOT, no inline scripts, no eval); style-src needs
+      'unsafe-inline' because Angular inlines critical CSS as a <style> tag and Google Fonts loads a
+      stylesheet — both removable (disable optimization.styles.inlineCritical + self-host the font).
     -->
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />

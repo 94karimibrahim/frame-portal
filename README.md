@@ -90,6 +90,37 @@ Every feature route is **lazy** (`loadComponent`/`loadChildren`) and guarded by 
 - **XSS:** rely on Angular's sanitization; no `bypassSecurityTrust*` and no untrusted `innerHTML`.
 - No secrets in the client — only public config in `src/environments/*`.
 
+## Deployment & security headers
+
+Serve the built static app (`dist/frame-portal/browser`) behind a reverse proxy that also routes `/api`
+to the backend (so the SPA stays same-origin and needs no CORS in prod). A ready-to-adapt config —
+SPA fallback, `/api` proxy, asset caching, and the headers below — is in
+[`deploy/nginx.conf.sample`](./deploy/nginx.conf.sample).
+
+CSP is enforced via **HTTP response headers** (not a `<meta>` tag, which can't express `frame-ancestors`).
+The directive below is tuned to exactly what this app needs and is verified against the production build:
+
+```
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+```
+
+Notes on the CSP:
+
+- `script-src 'self'` — the AOT build ships no inline scripts and no `eval`.
+- `style-src … 'unsafe-inline'` — required because Angular inlines critical CSS as a `<style>` tag and
+  Google Fonts loads a `<link>` stylesheet. To drop `'unsafe-inline'`: set
+  `optimization.styles.inlineCritical: false` in `angular.json` **and** self-host the Outfit font (then
+  also remove the `fonts.googleapis.com` / `fonts.gstatic.com` origins).
+- `img-src 'self' data:` — the 2FA authenticator QR is rendered as a `data:` image URI.
+- `connect-src 'self'` — assumes a same-origin `/api`. If the API is on another origin, add that origin.
+
+> The backend remains responsible for HTTPS termination, CORS (restrictive allow-list), CSRF posture
+> (bearer tokens, not cookies, today), and rate limiting — this client is built to match those.
+
 ## Build configuration note
 
 `angular.json` replaces `environment.ts` with `environment.development.ts` for the dev build. The shared

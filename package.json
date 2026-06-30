@@ -8,17 +8,19 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
+    "test:coverage": "ng test --watch=false --browsers=ChromeHeadless --code-coverage",
+    "coverage:check": "node tools/check-coverage.mjs",
     "lint": "ng lint",
     "format": "prettier --write \"src/**/*.{ts,html,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,html,css}\"",
     "prepare": "husky"
   },
   "lint-staged": {
-    "src/**/*.{ts,html}": [
+    "src/**/*.ts": [
       "eslint --fix",
       "prettier --write"
     ],
-    "src/**/*.css": [
+    "src/**/*.{html,css}": [
       "prettier --write"
     ]
   },

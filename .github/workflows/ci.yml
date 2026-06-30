@@ -35,7 +35,12 @@ jobs:
         run: npm run format:check
 
       - name: Unit tests (headless, with coverage)
-        run: npm run test:ci -- --code-coverage
+        # pipefail (GitHub's default bash) makes a test failure fail the step; tee keeps the summary
+        # for the coverage gate below.
+        run: npm run test:ci -- --code-coverage | tee coverage-output.txt
+
+      - name: Coverage gate
+        run: node tools/check-coverage.mjs coverage-output.txt
 
       - name: Production build
         run: npm run build
