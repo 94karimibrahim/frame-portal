@@ -43,3 +43,9 @@ Thumbs.db
 
 # CI coverage capture
 coverage-output.txt
+
+# Playwright
+/playwright-report
+/test-results
+/blob-report
+/playwright/.cache
