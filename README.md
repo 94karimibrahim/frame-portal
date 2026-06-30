@@ -11,6 +11,17 @@ center) with runtime English↔Arabic localization and full light/dark × LTR/RT
 See [`FRONTEND_PLAN.md`](./FRONTEND_PLAN.md) for the full backend inventory, architecture decisions,
 and the verified API contract this client is built against.
 
+## Using this as a template
+
+This repo is a **complete reference app** (a multi-tenant IAM admin). The `core/`, `shared/`, `layout/`,
+and `features/auth` code is reusable infrastructure (the skeleton); the Manage/Administration features
+are demo domain you replace with your own. To strip the demo down to a skeleton and scaffold new
+features, see **[`docs/USING-AS-A-TEMPLATE.md`](./docs/USING-AS-A-TEMPLATE.md)**. Quick start:
+
+```bash
+npm run new:feature -- reports   # generates an idiomatic feature + prints the wiring to paste
+```
+
 ## Prerequisites
 
 - Node 20+ and npm.
