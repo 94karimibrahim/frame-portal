@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Global design-system layer (ported from the TailAdmin Free base, demo styles removed).
+ * Theme surfaces are exposed as CSS variables so both light and dark resolve from one place,
+ * and RTL is handled by Tailwind logical properties in components — no RTL stylesheet here.
+ */
+@layer base {
+  :root {
+    --color-bg: 255 255 255; /* page background (rgb triplet) */
+    --color-surface: 255 255 255; /* cards / panels */
+    --color-text: 16 24 40; /* gray-900 */
+    --color-muted: 102 112 133; /* gray-500 */
+    --color-border: 228 231 236; /* gray-200 */
+  }
+
+  .dark {
+    --color-bg: 16 24 40; /* gray-900 */
+    --color-surface: 26 34 49; /* gray-dark */
+    --color-text: 244 247 250;
+    --color-muted: 152 162 179; /* gray-400 */
+    --color-border: 52 64 84; /* gray-700 */
+  }
+
+  html {
+    @apply h-full;
+  }
+
+  body {
+    @apply m-0 h-full bg-gray-50 font-sans text-theme-sm text-gray-800 antialiased dark:bg-gray-900 dark:text-gray-200;
+  }
+
+  /* Honour the document direction (set by LocaleService) without per-component overrides. */
+  [dir='rtl'] {
+    direction: rtl;
+  }
+
+  /* Visible, consistent keyboard focus ring on every focusable element (a11y baseline). */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    @apply outline-none ring-2 ring-brand-500/60 ring-offset-2 ring-offset-white dark:ring-offset-gray-900;
+  }
+
+  /*
+   * Respect the OS "reduce motion" setting for everything CSS-driven — the skeleton pulse, the route
+   * progress sweep, card/button hover transitions, scale taps. (Angular's route/list/toast animations
+   * opt out separately via `[@.disabled]`.) Durations collapse rather than vanish so transitionend/
+   * animationend listeners still fire, and looping animations run once instead of forever.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/*
+ * Form-control + button component classes (TailAdmin Free visual language). These are the minimal pieces
+ * the auth slice needs; they will fold into the shared UI kit when it is built. Error/RTL handled via
+ * modifier classes and Tailwind logical properties.
+ */
+@layer components {
+  .form-label {
+    @apply mb-1.5 block text-theme-sm font-medium text-gray-700 dark:text-gray-300;
+  }
+
+  .form-input {
+    @apply block w-full rounded-theme-md border border-gray-300 bg-white px-4 py-2.5 text-theme-sm text-gray-900 shadow-theme-xs transition placeholder:text-gray-400 hover:border-gray-400 focus:border-brand-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 dark:hover:border-gray-600;
+  }
+
+  .form-input--error {
+    @apply border-error-500 hover:border-error-500 focus:border-error-500;
+  }
+
+  .form-input--success {
+    @apply border-success-500 hover:border-success-500 focus:border-success-500;
+  }
+
+  .form-error {
+    @apply mt-1.5 text-theme-xs text-error-700 dark:text-error-500;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-theme-md px-5 py-2.5 text-theme-sm font-medium transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100;
+  }
+
+  .btn-primary {
+    @apply bg-brand-500 text-white shadow-theme-sm hover:bg-brand-600 hover:shadow-theme-md;
+  }
+
+  .btn-ghost {
+    @apply border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800;
+  }
+
+  /* Neutral action (cancel, dismiss); same outline treatment as ghost, named for intent. */
+  .btn-secondary {
+    @apply border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800;
+  }
+
+  /* Destructive action (delete, revoke). */
+  .btn-danger {
+    @apply bg-error-500 text-white hover:bg-error-600;
+  }
+
+  .btn-block {
+    @apply w-full;
+  }
+
+  .auth-link {
+    @apply font-medium text-brand-500 hover:text-brand-600;
+  }
+
+  .alert-error {
+    @apply rounded-theme-md border border-error-100 bg-error-50 px-4 py-3 text-theme-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-500;
+  }
+
+  .alert-success {
+    @apply rounded-theme-md border border-success-100 bg-success-50 px-4 py-3 text-theme-sm text-success-700 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-500;
+  }
+
+  .alert-info {
+    @apply rounded-theme-md border border-info-100 bg-info-50 px-4 py-3 text-theme-sm text-info-700 dark:border-info-500/30 dark:bg-info-500/10 dark:text-info-500;
+  }
+}
+
+/* Indeterminate top progress bar (route navigation); the bar sweeps across the viewport. */
+@keyframes route-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+/* Thin, theme-aware scrollbars for overflow areas (sidebars, tables, dialogs). */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-gray-300 dark:bg-gray-700;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}

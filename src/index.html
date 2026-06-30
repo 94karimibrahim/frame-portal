@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <title>Frame Portal</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <!--
+      Content-Security-Policy is enforced via HTTP response headers at the host (see client/README.md
+      for the exact directive string and an nginx example). It is NOT set as a <meta> here because a
+      meta CSP cannot express frame-ancestors and would also break the dev server's HMR. The app is
+      built to satisfy a strict policy: no inline scripts, and no component-inline styles (the UI kit is
+      Tailwind utility classes only), so script-src/style-src need no 'unsafe-inline'.
+    -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="h-full">
+    <app-root></app-root>
+  </body>
+</html>
