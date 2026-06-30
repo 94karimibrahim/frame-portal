@@ -3,4 +3,4 @@ node_modules
 .angular
 coverage
 package-lock.json
-src/assets/i18n
+public/i18n

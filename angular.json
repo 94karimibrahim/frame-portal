@@ -76,7 +76,8 @@
             "development": {
               "buildTarget": "frame-portal:build:development",
               "port": 5173,
-              "host": "localhost"
+              "host": "localhost",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

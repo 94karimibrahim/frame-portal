@@ -101,6 +101,21 @@ Every feature route is **lazy** (`loadComponent`/`loadChildren`) and guarded by 
 - **XSS:** rely on Angular's sanitization; no `bypassSecurityTrust*` and no untrusted `innerHTML`.
 - No secrets in the client — only public config in `src/environments/*`.
 
+### Roadmap: httpOnly-cookie refresh (Phase 2)
+
+The one residual token-theft surface today is the refresh token in `sessionStorage` — readable by any
+successful XSS payload (the strict CSP above is the compensating control). Closing it is a deliberately
+small, isolated change, all behind `TokenStore` (`core/auth/token-store.service.ts`):
+
+1. Backend: on login/refresh, set the refresh token as an `HttpOnly; Secure; SameSite` cookie (instead of
+   in the JSON body) and enable `AllowCredentials` on CORS / read it from the cookie on `/auth/refresh`.
+2. Client: send credentialed requests (`withCredentials: true`) and **stop** persisting the refresh token —
+   `TokenStore` keeps only the in-memory access token; `restoreSession()` calls `/auth/refresh` (the
+   browser attaches the cookie) on reload. No component or interceptor outside `TokenStore` changes.
+
+The access token already lives in memory only, so after this the JS holds nothing an XSS could exfiltrate
+for long-lived reuse.
+
 ## Deployment & security headers
 
 Serve the built static app (`dist/frame-portal/browser`) behind a reverse proxy that also routes `/api`
