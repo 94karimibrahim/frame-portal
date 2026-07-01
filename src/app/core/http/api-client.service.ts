@@ -16,9 +16,6 @@ export type QueryParams = Record<string, string | number | boolean | null | unde
 export class ApiClient {
   private readonly http = inject(HttpClient);
 
-  /** The configured API base (e.g. `/api` in prod), exposed so interceptors can match API requests. */
-  static readonly baseUrl = environment.apiBaseUrl;
-
   get<T>(path: string, params?: QueryParams): Observable<T> {
     return this.http
       .get<ApiResponse<T>>(this.url(path), { params: this.toParams(params) })

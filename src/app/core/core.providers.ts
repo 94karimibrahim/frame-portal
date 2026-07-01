@@ -32,10 +32,11 @@ export function provideCore(): (Provider | EnvironmentProviders)[] {
       theme.init();
 
       // Preload the active language dictionary, then restore any prior session. Restoration never
-      // throws — a failure just leaves the user signed out at the login page.
+      // throws (AuthService.restoreSession resolves false and clears the session on any failure),
+      // so a dead refresh token just leaves the user signed out at the login page.
       await Promise.all([
         firstValueFrom(transloco.load(locale.culture())),
-        firstValueFrom(auth.restoreSession()).catch(() => false),
+        firstValueFrom(auth.restoreSession()),
       ]);
     }),
   ];

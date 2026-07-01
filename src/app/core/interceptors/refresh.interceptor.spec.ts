@@ -98,26 +98,28 @@ describe('refreshInterceptor', () => {
     expect(errored).toBeTrue();
   });
 
-  it('shares a single refresh across concurrent 401s (single-flight)', () => {
+  it('retries every concurrent 401 once the shared refresh resolves', () => {
+    // Rotation is single-flighted inside AuthService.refresh (covered in auth.service.spec); the
+    // interceptor just delegates to it and retries each original request when it resolves.
     const gate = new Subject<AuthResult>();
     configure(gate.asObservable());
 
-    http.get('/api/a').subscribe();
-    http.get('/api/b').subscribe();
+    const done: string[] = [];
+    http.get<{ id: string }>('/api/a').subscribe((r) => done.push(r.id));
+    http.get<{ id: string }>('/api/b').subscribe((r) => done.push(r.id));
 
     // Both in-flight requests fail before the refresh resolves.
     httpMock.expectOne('/api/a').flush(null, { status: 401, statusText: 'Unauthorized' });
     httpMock.expectOne('/api/b').flush(null, { status: 401, statusText: 'Unauthorized' });
 
-    // Exactly one rotation despite two failures.
-    expect(auth.refresh).toHaveBeenCalledTimes(1);
-
     // Resolve the shared refresh; both originals retry.
     gate.next(authResult);
     gate.complete();
 
-    httpMock.expectOne('/api/a').flush({});
-    httpMock.expectOne('/api/b').flush({});
-    expect(auth.refresh).toHaveBeenCalledTimes(1);
+    httpMock.expectOne('/api/a').flush({ id: 'a' });
+    httpMock.expectOne('/api/b').flush({ id: 'b' });
+
+    // Both original requests were transparently retried and completed after the refresh.
+    expect(done.sort()).toEqual(['a', 'b']);
   });
 });

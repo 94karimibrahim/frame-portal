@@ -1,7 +1,17 @@
 import { HttpHeaders } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, of, switchMap, tap } from 'rxjs';
+import {
+  Observable,
+  catchError,
+  finalize,
+  map,
+  of,
+  shareReplay,
+  switchMap,
+  tap,
+  throwError,
+} from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   ApiResponse,
@@ -50,6 +60,15 @@ export class AuthService {
   private readonly _identity = signal<Identity | null>(null);
   private readonly _permissions = signal<ReadonlySet<string>>(new Set());
 
+  /**
+   * Single-flight token rotation, shared across every caller (the refresh interceptor's concurrent 401s,
+   * the bootstrap {@link restoreSession}, an HMR re-bootstrap). The backend rotates and revokes the old
+   * refresh token on use, so two overlapping rotations of the same token would replay a spent one and trip
+   * server-side reuse-detection — which revokes the whole token family and logs the user out. Sharing one
+   * in-flight rotation here guarantees the token is rotated exactly once.
+   */
+  private inFlightRefresh: Observable<AuthResult> | null = null;
+
   readonly identity = this._identity.asReadonly();
   readonly isAuthenticated = computed(() => this._identity() !== null);
   readonly isSuperAdmin = computed(() => this._identity()?.isSuperAdmin ?? false);
@@ -87,22 +106,28 @@ export class AuthService {
       .pipe(switchMap((r) => this.establish(r)));
   }
 
-  /** Rotates the token pair using the stored refresh token. Used by the refresh interceptor + reload. */
+  /**
+   * Rotates the token pair using the stored refresh token. Used by the refresh interceptor + reload.
+   * Single-flighted (see {@link inFlightRefresh}): concurrent callers share one rotation, so a stale
+   * refresh token is never replayed.
+   */
   refresh(): Observable<AuthResult> {
+    if (this.inFlightRefresh) {
+      return this.inFlightRefresh;
+    }
     const refreshToken = this.tokens.getRefreshToken();
     if (!refreshToken) {
-      return of<AuthResult>(null as unknown as AuthResult).pipe(
-        tap(() => {
-          throw new Error('No refresh token');
-        }),
-      );
+      return throwError(() => new Error('No refresh token'));
     }
-    return this.api.post<AuthResult>('/auth/refresh', { refreshToken }).pipe(
+    this.inFlightRefresh = this.api.post<AuthResult>('/auth/refresh', { refreshToken }).pipe(
       tap((r) => {
         this.tokens.setTokens(r.accessToken, r.refreshToken);
         this._identity.set(this.buildIdentity(r));
       }),
+      finalize(() => (this.inFlightRefresh = null)),
+      shareReplay(1),
     );
+    return this.inFlightRefresh;
   }
 
   /**
@@ -117,8 +142,12 @@ export class AuthService {
     return this.refresh().pipe(
       switchMap(() => this.loadPermissions()),
       map(() => true),
-      // Any failure (expired/reused refresh) => clean slate, no error bubbling at bootstrap.
-      switchMap((ok) => of(ok)),
+      // Any failure (expired/reused refresh) => clean slate: clear the dead refresh token so later
+      // reloads don't replay it, and resolve false so bootstrap simply shows the login page.
+      catchError(() => {
+        this.clearSession();
+        return of(false);
+      }),
     );
   }
 

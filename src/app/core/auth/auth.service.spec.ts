@@ -111,4 +111,41 @@ describe('AuthService', () => {
     expect(errored).toBeTrue();
     httpMock.expectNone(`${API}/auth/refresh`);
   });
+
+  it('single-flights concurrent refresh() calls into one rotation', () => {
+    refreshToken = 'r0';
+    const results: string[] = [];
+    // Two overlapping callers (e.g. the interceptor's 401 retry and the bootstrap session restore).
+    service.refresh().subscribe((r) => results.push(r.accessToken));
+    service.refresh().subscribe((r) => results.push(r.accessToken));
+
+    // Exactly one POST despite two subscribers, so the (single-use) refresh token is never replayed.
+    const req = httpMock.expectOne(`${API}/auth/refresh`);
+    expect(req.request.body).toEqual({ refreshToken: 'r0' });
+    req.flush(envelope(authResult(jwt({}))));
+
+    expect(results.length).toBe(2);
+    expect(tokens.setTokens).toHaveBeenCalledTimes(1);
+
+    // Once settled, the in-flight sharing is released so a later refresh issues a fresh request.
+    service.refresh().subscribe();
+    httpMock.expectOne(`${API}/auth/refresh`).flush(envelope(authResult(jwt({}))));
+  });
+
+  it('restoreSession() resolves false and clears the session when the rotation fails', () => {
+    refreshToken = 'r-dead';
+    let restored: boolean | undefined;
+    service.restoreSession().subscribe((ok) => (restored = ok));
+
+    // The stored refresh token is expired/revoked — the backend rejects the rotation.
+    httpMock
+      .expectOne(`${API}/auth/refresh`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    // Never errors (bootstrap awaits it bare), and the dead token is dropped so the
+    // next reload doesn't replay it.
+    expect(restored).toBeFalse();
+    expect(tokens.clear).toHaveBeenCalled();
+    expect(service.isAuthenticated()).toBeFalse();
+  });
 });
