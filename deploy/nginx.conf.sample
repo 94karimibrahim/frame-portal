@@ -24,18 +24,17 @@ server {
   # --- Security headers -------------------------------------------------------
   # CSP is tuned to exactly what this app needs:
   #   script-src 'self'           → AOT build, no inline scripts, no eval.
-  #   style-src  … 'unsafe-inline'→ Angular inlines critical CSS as a <style> tag,
-  #                                 and Google Fonts loads a <link> stylesheet.
+  #   style-src  … 'unsafe-inline'→ Angular inlines critical CSS as a <style> tag.
   #                                 To DROP 'unsafe-inline': set
   #                                 optimization.styles.inlineCritical=false in
-  #                                 angular.json AND self-host the font (remove the
-  #                                 fonts.googleapis.com/​gstatic.com origins below).
-  #   font-src   … gstatic        → Google Fonts (Outfit). Remove if self-hosting.
+  #                                 angular.json.
+  #   font-src   'self'            → Outfit is self-hosted (@fontsource, bundled by
+  #                                 the build); no third-party font origin.
   #   img-src    'self' data:      → the 2FA authenticator QR is a data: URI.
   #   connect-src 'self'           → same-origin /api. If your API is on another
   #                                 origin, add it here (e.g. https://api.example.com).
   #   frame-ancestors 'none'       → clickjacking protection (replaces X-Frame-Options).
-  add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" always;
+  add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests" always;
   add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
   add_header X-Content-Type-Options "nosniff" always;
   add_header Referrer-Policy "strict-origin-when-cross-origin" always;
@@ -52,9 +51,14 @@ server {
   }
 
   # --- Static assets: long-cache the content-hashed files ---------------------
+  # NOTE: nginx `add_header` directives are inherited from the server block ONLY if a location adds
+  # none of its own. Adding Cache-Control here would silently drop CSP/HSTS/nosniff on every asset
+  # response, so the security headers that matter on non-document responses are repeated below.
   location ~* \.(?:js|css|woff2?|png|jpg|jpeg|gif|svg|ico)$ {
     expires 1y;
     add_header Cache-Control "public, immutable";
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header X-Content-Type-Options "nosniff" always;
     try_files $uri =404;
   }
 

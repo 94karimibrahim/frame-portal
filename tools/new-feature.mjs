@@ -11,7 +11,9 @@ import { join } from 'node:path';
 const name = process.argv[2];
 
 if (!name || !/^[a-z][a-z0-9-]*$/.test(name)) {
-  console.error('Usage: npm run new:feature -- <kebab-name>   (lowercase, digits, hyphens; e.g. audit-logs)');
+  console.error(
+    'Usage: npm run new:feature -- <kebab-name>   (lowercase, digits, hyphens; e.g. audit-logs)',
+  );
   process.exit(1);
 }
 
@@ -121,7 +123,9 @@ writeFileSync(join(dir, `${name}.service.ts`), service);
 writeFileSync(join(dir, `${name}-page.component.ts`), page);
 writeFileSync(join(dir, `${name}.routes.ts`), routes);
 
-console.log(`✓ Created src/app/features/${name}/ (${name}.service.ts, ${name}-page.component.ts, ${name}.routes.ts)\n`);
+console.log(
+  `✓ Created src/app/features/${name}/ (${name}.service.ts, ${name}-page.component.ts, ${name}.routes.ts)\n`,
+);
 console.log('Now do the six wiring edits (docs/USING-AS-A-TEMPLATE.md §2):\n');
 
 console.log(`1) src/app/app.routes.ts — add a lazy child of the shell:
@@ -146,5 +150,7 @@ console.log(`4) public/i18n/en.json AND ar.json — add the namespace + nav labe
       nav: { ..., "${ns}": "${pascal}" }
 `);
 
-console.log(`5) (optional) src/app/features/dashboard/dashboard.component.ts — add a gated quick-link card.`);
+console.log(
+  `5) (optional) src/app/features/dashboard/dashboard.component.ts — add a gated quick-link card.`,
+);
 console.log(`6) Verify: npm run lint && npm test && npm run build\n`);

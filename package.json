@@ -2,6 +2,9 @@
   "name": "frame-portal",
   "version": "0.0.0",
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -14,16 +17,19 @@
     "new:feature": "node tools/new-feature.mjs",
     "e2e": "playwright test",
     "lint": "ng lint",
-    "format": "prettier --write \"src/**/*.{ts,html,css}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,html,css}\"",
+    "format": "prettier --write \"{src,e2e}/**/*.{ts,html,css}\" \"tools/**/*.mjs\"",
+    "format:check": "prettier --check \"{src,e2e}/**/*.{ts,html,css}\" \"tools/**/*.mjs\"",
     "prepare": "husky"
   },
   "lint-staged": {
-    "src/**/*.ts": [
+    "{src,e2e}/**/*.ts": [
       "eslint --fix",
       "prettier --write"
     ],
     "src/**/*.{html,css}": [
+      "prettier --write"
+    ],
+    "tools/**/*.mjs": [
       "prettier --write"
     ]
   },
@@ -49,6 +55,7 @@
     "@angular/forms": "^20.1.0",
     "@angular/platform-browser": "^20.1.0",
     "@angular/router": "^20.1.0",
+    "@fontsource/outfit": "^5.2.8",
     "@jsverse/transloco": "^8.4.0",
     "@tanstack/angular-table": "^8.21.4",
     "qrcode": "^1.5.4",

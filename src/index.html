@@ -12,17 +12,11 @@
       Content-Security-Policy is enforced via HTTP response headers at the host (see README.md
       "Deployment & security headers" for the exact directive string and deploy/nginx.conf.sample). It is
       NOT set as a <meta> here because a meta CSP cannot express frame-ancestors and would also break the
-      dev server's HMR. script-src is 'self' (AOT, no inline scripts, no eval); style-src needs
-      'unsafe-inline' because Angular inlines critical CSS as a <style> tag and Google Fonts loads a
-      stylesheet — both removable (disable optimization.styles.inlineCritical + self-host the font).
+      dev server's HMR. script-src is 'self' (AOT, no inline scripts, no eval). The Outfit font is
+      self-hosted (@fontsource, imported in styles.css), so no third-party origin is contacted; style-src
+      still needs 'unsafe-inline' only because Angular inlines critical CSS as a <style> tag — removable
+      by disabling optimization.styles.inlineCritical in angular.json.
     -->
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
   </head>
   <body class="h-full">
     <app-root></app-root>
