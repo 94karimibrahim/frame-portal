@@ -79,24 +79,32 @@ export interface UserRowActions {
           {{ 'users.manageRoles' | transloco }}
         </button>
 
-        <button
-          *appHasPermission="perms.update"
-          cdkMenuItem
-          type="button"
-          [class]="itemClass"
-          [class.opacity-50]="guarded(user)"
-          [class.cursor-not-allowed]="guarded(user)"
-          [cdkMenuItemDisabled]="guarded(user)"
-          [attr.title]="guardReason(user)"
-          (cdkMenuItemTriggered)="actions.unlock(user)"
-        >
-          <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path
-              d="M10 2a4 4 0 0 0-4 4v1H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H8V6a2 2 0 0 1 3.86-.75.75.75 0 1 0 1.38-.6A3.5 3.5 0 0 0 10 2Zm0 9a1 1 0 0 1 1 1v1.5a1 1 0 1 1-2 0V12a1 1 0 0 1 1-1Z"
-            />
-          </svg>
-          {{ 'users.unlock' | transloco }}
-        </button>
+        <!-- Only shown for accounts actually under a lockout (see UserListItem.isLockedOut). -->
+        @if (user.isLockedOut) {
+          <button
+            *appHasPermission="perms.update"
+            cdkMenuItem
+            type="button"
+            [class]="itemClass"
+            [class.opacity-50]="guarded(user)"
+            [class.cursor-not-allowed]="guarded(user)"
+            [cdkMenuItemDisabled]="guarded(user)"
+            [attr.title]="guardReason(user)"
+            (cdkMenuItemTriggered)="actions.unlock(user)"
+          >
+            <svg
+              class="h-4 w-4 shrink-0"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M10 2a4 4 0 0 0-4 4v1H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2H8V6a2 2 0 0 1 3.86-.75.75.75 0 1 0 1.38-.6A3.5 3.5 0 0 0 10 2Zm0 9a1 1 0 0 1 1 1v1.5a1 1 0 1 1-2 0V12a1 1 0 0 1 1-1Z"
+              />
+            </svg>
+            {{ 'users.unlock' | transloco }}
+          </button>
+        }
 
         <button
           *appHasPermission="perms.managePassword"

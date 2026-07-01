@@ -51,6 +51,13 @@ export interface UserListItem {
   status: UserStatus;
   /** Protected system account (e.g. the bootstrap admin); guarded from deletion. */
   isSystem: boolean;
+  /**
+   * Whether the account is currently under an auth lockout (too many failed sign-ins). Distinct from
+   * {@link status}; drives whether the "Unlock" action is offered. Backend-authoritative (e.g.
+   * `LockoutEnd != null && LockoutEnd > now`). Optional so the UI degrades gracefully — absent/`undefined`
+   * simply means "not known to be locked" and no Unlock action is shown — until the API ships the field.
+   */
+  isLockedOut?: boolean;
   createdAt: string;
 }
 
@@ -86,6 +93,10 @@ export interface User {
   address?: string | null;
   postalCode?: string | null;
   twoFactorEnabled: boolean;
+  /** Currently under an auth lockout; gates the "Unlock" action (optional until the API ships it). */
+  isLockedOut?: boolean;
+  /** When the current lockout expires (ISO), when known; shown on the details page. */
+  lockoutEnd?: string | null;
   lastLoginAt?: string | null;
   createdAt: string;
 }

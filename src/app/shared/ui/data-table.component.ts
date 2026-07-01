@@ -104,7 +104,7 @@ import {
           @for (headerGroup of table.getHeaderGroups(); track headerGroup.id) {
             <tr class="border-b border-gray-200 dark:border-gray-800">
               @if (selectable()) {
-                <th class="w-10 py-3.5 ps-6 pe-4">
+                <th class="w-10 py-3.5 ps-6 pe-4 text-start">
                   <input
                     type="checkbox"
                     class="h-4 w-4 rounded border-gray-300 text-brand-500"

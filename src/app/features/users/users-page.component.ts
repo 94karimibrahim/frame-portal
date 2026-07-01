@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { ColumnDef, flexRenderComponent } from '@tanstack/angular-table';
 import { catchError, debounceTime, distinctUntilChanged, forkJoin, map, merge, of } from 'rxjs';
@@ -29,8 +30,6 @@ import { UserActionsCellComponent, UserRowActions } from './cells/user-actions-c
 import { UserCreatedCellComponent } from './cells/user-created-cell.component';
 import { UserNameCellComponent } from './cells/user-name-cell.component';
 import { UserStatusCellComponent } from './cells/user-status-cell.component';
-import { UserDetailDrawerComponent } from './user-detail-drawer.component';
-import { UserDialogInput, UserFormDialogComponent } from './user-form-dialog.component';
 import { UserRolesDialogComponent, UserRolesDialogInput } from './user-roles-dialog.component';
 import { UserService } from './user.service';
 
@@ -44,9 +43,10 @@ interface StatusChip {
 
 /**
  * Users management page — a polished filter panel (per-column Name/Email/Role search + status quick-filter
- * chips with live counts + a sort menu + Clear), a server-paged grid with avatar rows and a slide-over
- * detail drawer, and create/edit drawers. All filtering/sorting/paging is **server-side** (the API does
- * the work); every control is permission-gated for convenience, with the backend authoritative.
+ * chips with live counts + a sort menu + Clear) and a server-paged grid with avatar rows. Rows and actions
+ * navigate to dedicated create/details/edit pages (see `users.routes`); role management and the destructive
+ * confirms stay as inline dialogs here. All filtering/sorting/paging is **server-side** (the API does the
+ * work); every control is permission-gated for convenience, with the backend authoritative.
  */
 @Component({
   selector: 'app-users-page',
@@ -63,9 +63,7 @@ interface StatusChip {
     TableSkeletonComponent,
     EmptyStateComponent,
     ModalComponent,
-    UserFormDialogComponent,
     UserRolesDialogComponent,
-    UserDetailDrawerComponent,
   ],
   template: `
     <app-page-header [title]="'users.title' | transloco" [subtitle]="'users.subtitle' | transloco">
@@ -317,22 +315,6 @@ interface StatusChip {
       }
     </app-card>
 
-    @if (detail(); as u) {
-      <app-user-detail-drawer
-        [user]="u"
-        (edit)="onDetailEdit($event)"
-        (manageRoles)="onDetailRoles($event)"
-        (unlock)="unlock($event)"
-        (resetPassword)="onDetailReset($event)"
-        (remove)="onDetailRemove($event)"
-        (closed)="detail.set(null)"
-      />
-    }
-
-    @if (dialog(); as input) {
-      <app-user-form-dialog [data]="input" (saved)="onSaved(input.mode)" (closed)="closeDialog()" />
-    }
-
     @if (rolesDialog(); as input) {
       <app-user-roles-dialog
         [data]="input"
@@ -447,10 +429,44 @@ interface StatusChip {
         </div>
       </app-modal>
     }
+
+    @if (pendingUnlock(); as target) {
+      <app-modal
+        [title]="'users.unlockTitle' | transloco"
+        widthClass="max-w-md"
+        (closed)="closeUnlock()"
+      >
+        <p class="text-theme-sm text-gray-600 dark:text-gray-300">
+          {{ 'users.unlockConfirm' | transloco: { name: target.name } }}
+        </p>
+        <div modalFooter class="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="closeUnlock()"
+            [disabled]="unlocking()"
+          >
+            {{ 'common.cancel' | transloco }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            (click)="confirmUnlock()"
+            [disabled]="unlocking()"
+          >
+            @if (unlocking()) {
+              <app-spinner size="sm" />
+            }
+            {{ 'users.unlock' | transloco }}
+          </button>
+        </div>
+      </app-modal>
+    }
   `,
 })
 export class UsersPageComponent {
   private readonly service = inject(UserService);
+  private readonly router = inject(Router);
   private readonly notify = inject(NotificationService);
   private readonly i18n = inject(TranslocoService);
   private readonly locale = inject(LocaleService);
@@ -503,19 +519,19 @@ export class UsersPageComponent {
   protected readonly rows = computed(() => this.result()?.items ?? []);
   protected readonly totalCount = computed(() => this.result()?.totalCount ?? 0);
 
-  protected readonly detail = signal<UserListItem | null>(null);
-  protected readonly dialog = signal<UserDialogInput | null>(null);
   protected readonly rolesDialog = signal<UserRolesDialogInput | null>(null);
   protected readonly pendingDelete = signal<{ id: string; name: string } | null>(null);
   protected readonly deleting = signal(false);
   protected readonly pendingReset = signal<{ id: string; name: string } | null>(null);
   protected readonly resetting = signal(false);
+  protected readonly pendingUnlock = signal<{ id: string; name: string } | null>(null);
+  protected readonly unlocking = signal(false);
 
   /** Row action handlers handed to the actions cell via TanStack column `meta`. */
   private readonly rowActions: UserRowActions = {
     edit: (user) => this.openEdit(user),
     manageRoles: (user) => this.openRoles(user),
-    unlock: (user) => this.unlock(user),
+    unlock: (user) => this.askUnlock(user),
     resetPassword: (user) => this.askReset(user),
     remove: (user) => this.askDelete(user),
   };
@@ -576,8 +592,14 @@ export class UsersPageComponent {
   protected readonly deletableSelected = computed(() => this.selected().filter((u) => !u.isSystem));
 
   constructor() {
-    merge(this.nameFilter.valueChanges, this.emailFilter.valueChanges, this.roleFilter.valueChanges)
-      .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
+    // distinctUntilChanged runs per control, *before* the merge — applied after, it would compare
+    // values across different controls and drop e.g. typing "x" in Email right after "x" in Name.
+    merge(
+      ...[this.nameFilter, this.emailFilter, this.roleFilter].map((c) =>
+        c.valueChanges.pipe(distinctUntilChanged()),
+      ),
+    )
+      .pipe(debounceTime(300), takeUntilDestroyed())
       .subscribe(() => {
         this.pageNumber.set(1);
         this.load();
@@ -715,39 +737,15 @@ export class UsersPageComponent {
   }
 
   protected openDetails(user: UserListItem): void {
-    this.detail.set(user);
-  }
-
-  protected onDetailEdit(user: UserListItem): void {
-    this.detail.set(null);
-    this.openEdit(user);
-  }
-
-  protected onDetailRoles(user: UserListItem): void {
-    this.detail.set(null);
-    this.openRoles(user);
-  }
-
-  protected onDetailRemove(user: UserListItem): void {
-    this.detail.set(null);
-    this.askDelete(user);
-  }
-
-  protected onDetailReset(user: UserListItem): void {
-    this.detail.set(null);
-    this.askReset(user);
+    this.router.navigate(['/users', user.id, 'details']);
   }
 
   protected openCreate(): void {
-    this.dialog.set({ mode: 'create' });
+    this.router.navigate(['/users', 'new']);
   }
 
   protected openEdit(user: UserListItem): void {
-    // The list row lacks the full profile; fetch it before opening the edit form.
-    this.service.get(user.id).subscribe({
-      next: (full) => this.dialog.set({ mode: 'edit', user: full }),
-      error: () => undefined,
-    });
+    this.router.navigate(['/users', user.id, 'edit']);
   }
 
   protected openRoles(user: UserListItem): void {
@@ -763,11 +761,40 @@ export class UsersPageComponent {
     this.notify.success(this.i18n.translate('users.rolesUpdated'));
   }
 
-  protected unlock(user: UserListItem): void {
-    this.service.unlock(user.id).subscribe({
-      next: () =>
-        this.notify.success(this.i18n.translate('users.unlocked', { name: user.fullName })),
-      error: () => undefined,
+  protected askUnlock(user: UserListItem): void {
+    this.pendingUnlock.set({ id: user.id, name: user.fullName });
+  }
+
+  protected closeUnlock(): void {
+    if (!this.unlocking()) {
+      this.pendingUnlock.set(null);
+    }
+  }
+
+  protected confirmUnlock(): void {
+    const target = this.pendingUnlock();
+    if (!target) {
+      return;
+    }
+    this.unlocking.set(true);
+    this.service.unlock(target.id).subscribe({
+      next: () => {
+        this.unlocking.set(false);
+        this.pendingUnlock.set(null);
+        // Reflect the cleared lockout locally so the row's Unlock action disappears without a reload.
+        this.result.update((page) =>
+          page
+            ? {
+                ...page,
+                items: page.items.map((item) =>
+                  item.id === target.id ? { ...item, isLockedOut: false } : item,
+                ),
+              }
+            : page,
+        );
+        this.notify.success(this.i18n.translate('users.unlocked', { name: target.name }));
+      },
+      error: () => this.unlocking.set(false),
     });
   }
 
@@ -803,21 +830,10 @@ export class UsersPageComponent {
     });
   }
 
-  protected closeDialog(): void {
-    this.dialog.set(null);
-  }
-
   protected closeDelete(): void {
     if (!this.deleting()) {
       this.pendingDelete.set(null);
     }
-  }
-
-  protected onSaved(mode: 'create' | 'edit'): void {
-    this.closeDialog();
-    this.notify.success(this.i18n.translate(mode === 'edit' ? 'users.updated' : 'users.created'));
-    this.load();
-    this.loadCounts();
   }
 
   /**
