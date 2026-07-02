@@ -130,6 +130,9 @@ wiring edits (§2) and you're done. The generated code already follows the house
 ### Conventions to keep
 
 - One folder per feature under `features/`; co-locate its service, page, dialogs, and custom cells.
+- When a page grows past "form + list", extract its server state into a **component-provided page
+  store** — see `features/users/users-page.store.ts` (query/filter/paging signals + optimistic
+  mutations, unit-tested in isolation) next to the component that keeps only the UI concerns.
 - Never call `HttpClient` directly from a component — go through a feature service → `ApiClient`.
 - Gate routes with `hasAnyPermission([...])` and elements with `*appHasPermission`; **the server stays
   authoritative** — the UI only hides what it would reject anyway.

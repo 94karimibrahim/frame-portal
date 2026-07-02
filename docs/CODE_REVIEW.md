@@ -94,9 +94,12 @@ the animations migration to native CSS.
 
 ### 🟢 Low / Optional
 
-- **L-3 —** `users-page.component.ts` (~980 lines) works fine but is the flagship example; extracting a small
+- **L-3 —** ~~`users-page.component.ts` (~980 lines) works fine but is the flagship example; extracting a small
   page facade/store (filters + paging + optimistic mutations) would give template consumers the pattern for
-  their own large pages.
+  their own large pages.~~ **Done 2026-07-02:** `users-page.store.ts` (component-provided, signals) now owns
+  the query state, paged data, and optimistic mutations, with 13 unit specs of its own (incl. an M-2
+  regression test); the component keeps dialogs/selection/navigation/CSV. Coverage floors ratcheted to
+  63/64/54/56. A vestigial `deleting` signal (never set) was removed along the way.
 - **L-6 —** *Accepted residual:* refresh token in `sessionStorage` until the backend enables the
   httpOnly-cookie flow (README "Roadmap: Phase 2"). Revisit when backend CORS `AllowCredentials` lands —
   and remember cookie auth reintroduces CSRF requirements.
@@ -116,7 +119,7 @@ the animations migration to native CSS.
 [x] Self-host Outfit (@fontsource); drop Google origins from the CSP            (L-5)
 [ ] Confirm backend isLockedOut/lockoutEnd contract, then commit the tree       (H-2)
 [x] Decide + execute the Angular 21 / version-currency policy                   (M-3) — see addendum
-[ ] Optional: users-page facade                                                 (L-3)
+[x] Optional: users-page facade                                                 (L-3) — users-page.store.ts
 [ ] Phase 2 (backend-gated): httpOnly-cookie refresh + CSRF posture             (L-6)
 ```
 

@@ -11,10 +11,9 @@
 //   node tools/check-coverage.mjs coverage-output.txt
 import { readFileSync } from 'node:fs';
 
-// Re-seated 2026-07: the users-page specs pulled the whole users feature into the instrumented set,
-// growing the denominator (raw covered statements went UP, the percentage down). Floors sit just under
-// the new measured values (~63/64/52/58).
-const THRESHOLDS = { Statements: 60, Lines: 60, Functions: 50, Branches: 55 };
+// Ratcheted 2026-07 after the users-page store extraction added 13 specs over the page's query/paging/
+// mutation logic (measured ~65/66/57/59).
+const THRESHOLDS = { Statements: 63, Lines: 64, Functions: 54, Branches: 56 };
 
 const input = process.argv[2] ? readFileSync(process.argv[2], 'utf8') : readFileSync(0, 'utf8'); // fd 0 = stdin
 
