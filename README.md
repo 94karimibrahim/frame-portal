@@ -4,7 +4,7 @@ A production Angular SPA for the Frame backend: multi-tenant identity & access m
 (users, roles, permissions, departments, tenant administration, and a self-service security
 center) with runtime English↔Arabic localization and full light/dark × LTR/RTL theming.
 
-- **Stack:** Angular 20 (standalone components, signals, typed reactive forms, lazy routes via
+- **Stack:** Angular 21 (standalone components, signals, typed reactive forms, lazy routes via
   `canMatch`), Tailwind CSS (TailAdmin tokens), Angular CDK, TanStack Table, Transloco, Jasmine/Karma.
 - **No NgModules.** Every component is standalone; state is signals + feature services.
 

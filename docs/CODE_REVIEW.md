@@ -115,12 +115,28 @@ the animations migration to native CSS.
 [x] Lint/format scope: e2e/ + tools/                                            (L-4)
 [x] Self-host Outfit (@fontsource); drop Google origins from the CSP            (L-5)
 [ ] Confirm backend isLockedOut/lockoutEnd contract, then commit the tree       (H-2)
-[ ] Decide + execute the Angular 21 / version-currency policy                   (M-3)
+[x] Decide + execute the Angular 21 / version-currency policy                   (M-3) — see addendum
 [ ] Optional: users-page facade                                                 (L-3)
 [ ] Phase 2 (backend-gated): httpOnly-cookie refresh + CSRF posture             (L-6)
 ```
 
 ---
+
+## Addendum — 2026-07-02: M-3 executed (Angular 21 upgrade)
+
+`ng update @angular/core@21 @angular/cli@21 @angular/cdk@21` ran on branch `upgrade/angular-21`:
+Angular 21.2.17 / CLI+build 21.2.18 / CDK 21.2.14 / TS 5.9.3. Every migration schematic reported
+"no changes made" (the codebase was already v21-idiomatic); neither optional migration applied
+(no `getCurrentNavigation` usage; already on `@angular/build:application`). One new v21 extended
+diagnostic (NG8021, redundant `prefetch on idle` in the dashboard `@defer`) was fixed.
+
+Re-verified on 21: lint ✅ · build ✅ 471.28 kB raw / 129.95 kB transfer (budget 550 kB) ·
+unit **77/77** ✅ with coverage gate passing (63.4/58.8/52.8/64.2 vs 60/55/50/60 floors) ·
+Playwright **5/5** ✅ · `npm audit --omit=dev` 0 vulnerabilities. Note: the 3 low dev-only
+`@babel/core` advisories were **not** cleared by v21 as hoped — still upstream-only, accepted.
+
+Still open from M-3's orbit: `@angular/animations` → native CSS migration, zoneless decision
+(zone.js remains), Tailwind 4 (own task), and writing down the quarterly `ng update` policy.
 
 ## Final Verdict
 

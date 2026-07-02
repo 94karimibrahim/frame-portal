@@ -81,10 +81,9 @@ import { ICONS } from '../../shared/icons';
 
     <!--
       The fold-line panels render after the browser settles the critical content. They carry no
-      time-sensitive data, so @defer keeps them off the first paint and shows a matching skeleton —
-      prefetched on idle so the swap is instant once they're reached.
+      time-sensitive data, so @defer keeps them off the first paint and shows a matching skeleton.
     -->
-    @defer (on idle; prefetch on idle) {
+    @defer (on idle) {
       <div class="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <!-- Getting started: always-available account shortcuts -->
         <app-card class="block lg:col-span-1" [padding]="false">
