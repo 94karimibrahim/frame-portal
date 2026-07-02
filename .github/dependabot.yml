@@ -6,6 +6,13 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    # Angular majors are a deliberate, manual `ng update` on a branch (USING-AS-A-TEMPLATE §6) —
+    # a Dependabot version bump would skip the migration schematics. Minors/patches stay automated.
+    ignore:
+      - dependency-name: "@angular/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "angular-eslint"
+        update-types: ["version-update:semver-major"]
     groups:
       angular:
         patterns:
