@@ -145,8 +145,10 @@ Still open from M-3's orbit: nothing — the quarterly `ng update` policy is wri
 `upgrade/tailwind-4`. `tailwind.config.js` is gone — the TailAdmin tokens are now the `@theme` block in
 `src/styles.css`; the dark class variant is a `@custom-variant`; component classes converted to
 `@utility`; 18 inline templates rewritten for v4 renames; `@tailwindcss/postcss` replaces
-`tailwindcss`+`autoprefixer` in `.postcssrc.json`. The tool added the v3-compat default-border-color
-layer (gray-200) — keep it until every border has an explicit color. Verified: lint + Prettier ✅,
+`tailwindcss`+`autoprefixer` in `.postcssrc.json`. The tool added a v3-compat default-border-color
+layer (gray-200); a follow-up audit found every border/divide in the app already declares an explicit
+color (the two colorless-looking spots get theirs via `[class]` bindings), so the layer was removed —
+verified by build/tests/e2e plus before/after screenshots. Verified: lint + Prettier ✅,
 build ✅ (387.60 kB raw / 103.77 kB transfer), 77/77 unit + gate ✅, 5/5 Playwright ✅, plus a manual
 rendered screenshot check of the login page in light **and** dark (an initial "dark inputs render
 light" scare was a probe artifact — the screenshot raced `.form-input`'s 150 ms background
