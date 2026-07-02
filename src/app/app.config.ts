@@ -1,7 +1,7 @@
 import {
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
-  provideZoneChangeDetection,
+  provideZonelessChangeDetection,
 } from '@angular/core';
 import {
   PreloadAllModules,
@@ -18,7 +18,11 @@ import { provideCore } from './core/core.providers';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    // Zoneless change detection: the app is 100% OnPush + signals, so nothing needs zone.js's
+    // monkey-patching. zone.js stays a dev-only test polyfill because the interceptor/auth specs
+    // use fakeAsync/tick (see angular.json's test polyfills); the Playwright suite exercises the
+    // real zoneless build.
+    provideZonelessChangeDetection(),
     provideRouter(
       routes,
       withComponentInputBinding(),
