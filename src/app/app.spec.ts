@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { App } from './app';
 
@@ -7,8 +6,7 @@ describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
-      // App hosts the toast container, which declares animations; tests need an animations provider.
-      providers: [provideRouter([]), provideNoopAnimations()],
+      providers: [provideRouter([])],
     }).compileComponents();
   });
 

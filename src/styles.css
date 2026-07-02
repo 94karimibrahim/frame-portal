@@ -51,10 +51,12 @@
   }
 
   /*
-   * Respect the OS "reduce motion" setting for everything CSS-driven — the skeleton pulse, the route
-   * progress sweep, card/button hover transitions, scale taps. (Angular's route/list/toast animations
-   * opt out separately via `[@.disabled]`.) Durations collapse rather than vanish so transitionend/
-   * animationend listeners still fire, and looping animations run once instead of forever.
+   * Respect the OS "reduce motion" setting for everything — since all motion is CSS-driven (route view
+   * transitions, `animate.enter`/`animate.leave` classes, skeleton pulse, hover transitions), this one
+   * block is the app's single motion opt-out. Durations collapse rather than vanish so transitionend/
+   * animationend listeners still fire (Angular's `animate.leave` relies on that to remove elements),
+   * and looping animations run once instead of forever. View-transition pseudo-elements need their own
+   * rule because `*` does not match them.
    */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -65,6 +67,20 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation-duration: 0.01ms !important;
+    }
+  }
+
+  /*
+   * Let `height: auto` (and friends) interpolate in animations where the browser supports it
+   * (Chromium 129+); the list enter/leave collapse below degrades to a plain cross-fade elsewhere.
+   */
+  :root {
+    interpolate-size: allow-keywords;
   }
 }
 
@@ -144,6 +160,89 @@
   }
   100% {
     transform: translateX(250%);
+  }
+}
+
+/*
+ * Route transition (Router `withViewTransitions`): a subtle cross-fade where the entering view also
+ * lifts a few pixels into place. `.route-view` (the wrapper around the shell's `<router-outlet>`) is
+ * snapshotted separately from the chrome, so only the page content animates. Keyframes with a single
+ * endpoint animate from/to the element's natural state.
+ */
+.route-view {
+  view-transition-name: route-content;
+}
+::view-transition-old(route-content) {
+  animation: route-leave 120ms ease-in both;
+}
+::view-transition-new(route-content) {
+  animation: route-enter 260ms ease-out 80ms both;
+}
+@keyframes route-leave {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/*
+ * Enter/leave classes for Angular's `animate.enter` / `animate.leave` bindings (the native-CSS
+ * replacement for the old @angular/animations triggers). `forwards` on the leave animations keeps the
+ * element at its final frame until Angular removes it on `animationend`.
+ *
+ * Toasts drop in from slightly above and fade/scale out — transform-only, so direction-agnostic
+ * (correct under RTL) with no height bookkeeping.
+ */
+.toast-enter {
+  animation: toast-in 220ms ease-out;
+}
+.toast-leave {
+  animation: toast-out 160ms ease-in forwards;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+}
+
+/*
+ * Per-item enter/leave for in-flow block lists (e.g. `<li>` rows): new items expand open while fading
+ * in; removed items collapse and fade out, so the list reflows smoothly instead of snapping. Height
+ * *and* vertical padding animate so the collapse is complete. The auto↔0 height interpolation needs
+ * `interpolate-size: allow-keywords` (set on :root); browsers without it still get the fade.
+ */
+.list-item-enter {
+  overflow: hidden;
+  animation: list-item-in 200ms ease-out;
+}
+.list-item-leave {
+  overflow: hidden;
+  animation: list-item-out 170ms ease-in forwards;
+}
+@keyframes list-item-in {
+  from {
+    opacity: 0;
+    height: 0;
+    padding-block: 0;
+  }
+}
+@keyframes list-item-out {
+  to {
+    opacity: 0;
+    height: 0;
+    padding-block: 0;
   }
 }
 

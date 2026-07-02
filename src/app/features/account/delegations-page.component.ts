@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
-import { listItem, prefersReducedMotion } from '../../shared/animations';
 import { AuthService } from '../../core/auth/auth.service';
 import { Permissions } from '../../core/auth/permissions';
 import { LocaleService } from '../../core/i18n/locale.service';
@@ -29,7 +28,6 @@ type DelegationStatus = 'active' | 'scheduled' | 'expired' | 'revoked';
 @Component({
   selector: 'app-delegations-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [listItem],
   imports: [
     TranslocoModule,
     PageHeaderComponent,
@@ -74,9 +72,13 @@ type DelegationStatus = 'active' | 'scheduled' | 'expired' | 'revoked';
               [description]="'delegations.emptyHint' | transloco"
             />
           } @else {
-            <ul class="divide-y divide-gray-100 dark:divide-gray-800" [@.disabled]="reduceMotion">
+            <ul class="divide-y divide-gray-100 dark:divide-gray-800">
               @for (d of delegations(); track d.id) {
-                <li @listItem class="flex items-center justify-between gap-4 px-2 py-3">
+                <li
+                  animate.enter="list-item-enter"
+                  animate.leave="list-item-leave"
+                  class="flex items-center justify-between gap-4 px-2 py-3"
+                >
                   <div class="min-w-0">
                     <p
                       class="flex items-center gap-2 text-theme-sm font-medium text-gray-700 dark:text-gray-200"
@@ -133,7 +135,6 @@ export class DelegationsPageComponent {
   private readonly notify = inject(NotificationService);
   private readonly i18n = inject(TranslocoService);
   private readonly locale = inject(LocaleService);
-  protected readonly reduceMotion = prefersReducedMotion();
 
   protected readonly delegations = signal<Delegation[]>([]);
   protected readonly loading = signal(true);

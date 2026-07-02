@@ -3,13 +3,13 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
-import { provideAnimations } from '@angular/platform-browser/animations';
 import {
   PreloadAllModules,
   provideRouter,
   withComponentInputBinding,
   withInMemoryScrolling,
   withPreloading,
+  withViewTransitions,
 } from '@angular/router';
 
 import { routes } from './app.routes';
@@ -27,8 +27,11 @@ export const appConfig: ApplicationConfig = {
       // any page after load is instant. Cheap for an app this size; revisit with a network-aware
       // strategy if the bundle grows.
       withPreloading(PreloadAllModules),
+      // Native route transitions (View Transitions API). The routed content's cross-fade/lift is
+      // scoped via `view-transition-name` in styles.css; browsers without support just skip the
+      // animation. Replaces the old @angular/animations routeFade trigger.
+      withViewTransitions({ skipInitialTransition: true }),
     ),
-    provideAnimations(),
     ...provideCore(),
   ],
 };

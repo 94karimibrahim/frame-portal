@@ -135,8 +135,17 @@ unit **77/77** ✅ with coverage gate passing (63.4/58.8/52.8/64.2 vs 60/55/50/6
 Playwright **5/5** ✅ · `npm audit --omit=dev` 0 vulnerabilities. Note: the 3 low dev-only
 `@babel/core` advisories were **not** cleared by v21 as hoped — still upstream-only, accepted.
 
-Still open from M-3's orbit: `@angular/animations` → native CSS migration, zoneless decision
-(zone.js remains), Tailwind 4 (own task), and writing down the quarterly `ng update` policy.
+Still open from M-3's orbit: zoneless decision (zone.js remains), Tailwind 4 (own task), and
+writing down the quarterly `ng update` policy.
+
+**2026-07-02, later:** the `@angular/animations` → native CSS migration is done. Route transitions
+now use the Router's `withViewTransitions()` (scoped to the shell content via `view-transition-name`);
+the toast and list-item enter/leave animations use the native `animate.enter`/`animate.leave` bindings
+with CSS keyframes in `styles.css`; reduced-motion is handled once by the global
+`prefers-reduced-motion` block (the `[@.disabled]`/`prefersReducedMotion()` plumbing is gone);
+`shared/animations.ts` is deleted and `@angular/animations` uninstalled. Initial bundle dropped
+471.28 → 412.62 kB raw (129.95 → 114.25 kB transfer). Re-verified: lint ✅, build ✅ (no warnings),
+77/77 unit + coverage gate ✅, 5/5 Playwright ✅.
 
 ## Final Verdict
 

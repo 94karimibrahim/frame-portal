@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
 import { NotificationService } from '../../core/notifications/notification.service';
-import { prefersReducedMotion, toastItem } from '../animations';
 
 /**
  * Renders the app-wide toast queue from {@link NotificationService}. Mounted once at the app root so any
@@ -12,19 +11,18 @@ import { prefersReducedMotion, toastItem } from '../animations';
 @Component({
   selector: 'app-toast-container',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [toastItem],
   imports: [TranslocoModule],
   template: `
     <div
       class="pointer-events-none fixed top-4 end-4 z-[100] flex w-full max-w-sm flex-col gap-3"
       aria-live="polite"
       aria-atomic="false"
-      [@.disabled]="reduceMotion"
     >
       @for (toast of notifications.items(); track toast.id) {
         <div
           role="status"
-          @toastItem
+          animate.enter="toast-enter"
+          animate.leave="toast-leave"
           class="pointer-events-auto flex items-start gap-3 rounded-theme-lg border bg-white p-4 shadow-theme-lg dark:bg-gray-dark"
           [class]="borderClass(toast.kind)"
           (mouseenter)="notifications.pause(toast.id)"
@@ -69,7 +67,6 @@ import { prefersReducedMotion, toastItem } from '../animations';
 })
 export class ToastContainerComponent {
   protected readonly notifications = inject(NotificationService);
-  protected readonly reduceMotion = prefersReducedMotion();
 
   protected borderClass(kind: string): string {
     switch (kind) {

@@ -3,7 +3,6 @@ import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { TranslocoModule } from '@jsverse/transloco';
-import { prefersReducedMotion, routeFade } from '../shared/animations';
 import { CommandPaletteComponent } from './command-palette.component';
 import { LayoutService } from './layout.service';
 import { RouteProgressComponent } from './route-progress.component';
@@ -18,7 +17,6 @@ import { TopbarComponent } from './topbar.component';
 @Component({
   selector: 'app-shell',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [routeFade],
   imports: [
     RouterOutlet,
     TranslocoModule,
@@ -54,12 +52,9 @@ import { TopbarComponent } from './topbar.component';
       <div class="flex min-w-0 flex-1 flex-col">
         <app-topbar />
         <main id="main-content" tabindex="-1" class="flex-1 p-4 outline-none sm:p-6">
-          <div
-            class="mx-auto w-full max-w-7xl"
-            [@routeFade]="routeKey(outlet)"
-            [@.disabled]="reduceMotion"
-          >
-            <router-outlet #outlet="outlet" />
+          <!-- .route-view names this box for the router's view transitions (see styles.css). -->
+          <div class="route-view mx-auto w-full max-w-7xl">
+            <router-outlet />
           </div>
         </main>
       </div>
@@ -70,9 +65,6 @@ export class AppShellComponent {
   protected readonly layout = inject(LayoutService);
   private readonly router = inject(Router);
 
-  /** Whether to skip route transitions (honors the OS "reduce motion" setting). */
-  protected readonly reduceMotion = prefersReducedMotion();
-
   constructor() {
     this.router.events
       .pipe(
@@ -80,24 +72,5 @@ export class AppShellComponent {
         takeUntilDestroyed(),
       )
       .subscribe(() => this.layout.closeMobile());
-  }
-
-  /**
-   * Animation state key for {@link routeFade}: a value that changes whenever the activated page changes,
-   * so the cross-fade re-fires per navigation. The deepest route's path is stable within a page and
-   * distinct between pages, which is exactly the trigger we want.
-   */
-  protected routeKey(outlet: RouterOutlet): string {
-    if (!outlet?.isActivated) {
-      return '';
-    }
-    let route = outlet.activatedRoute.snapshot;
-    while (route.firstChild) {
-      route = route.firstChild;
-    }
-    return route.pathFromRoot
-      .map((r) => r.url.map((s) => s.path).join('/'))
-      .filter(Boolean)
-      .join('/');
   }
 }
