@@ -14,7 +14,7 @@ new feature following the repo's conventions.
 | Area | Path | Verdict |
 |---|---|---|
 | HTTP, auth, guards, interceptors, models (transport), tenant, i18n, theme, notifications, command-palette | `src/app/core/**` | **Keep** — the engine |
-| UI kit (modal, data-table, pagination, badge, …), directives, forms base, util, icons, animations | `src/app/shared/**` | **Keep** |
+| UI kit (modal, data-table, pagination, badge, …), directives, forms base, util, icons | `src/app/shared/**` | **Keep** |
 | App shell, sidebar, topbar, breadcrumb, route progress, nav model | `src/app/layout/**` | **Keep** (trim `nav.model.ts`) |
 | Full auth flow (login, register, forgot/reset, 2FA, confirm-email, unlock) | `src/app/features/auth/**` | **Keep** |
 | 403 / 404 pages | `src/app/features/errors/**` | **Keep** |
@@ -146,3 +146,33 @@ wiring edits (§2) and you're done. The generated code already follows the house
   `src/environments/*` (secrets stay on the backend — see `environment.types.ts`).
 - **Security headers:** ship the CSP from the README "Deployment & security headers" section /
   `deploy/nginx.conf.sample`.
+
+---
+
+## 6. Version-currency policy
+
+A template that lags a major hands every new app tech debt on day one — so this repo tracks the
+**latest stable Angular major** deliberately, not opportunistically.
+
+- **Dependabot** (weekly, configured in `.github/dependabot.yml`) keeps minors/patches current, but it
+  **never proposes majors**. Majors are a manual, scheduled job.
+- **Quarterly** (or as soon as a new Angular major ships): run the update on a branch and let the
+  migration schematics do the work —
+
+  ```bash
+  git switch -c upgrade/angular-<N>
+  npx ng update @angular/core@<N> @angular/cli@<N> @angular/cdk@<N>
+  npm run lint && npm run test:coverage && npm run e2e && npm run build
+  ```
+
+  Never hand-edit Angular versions in `package.json`: `ng update` runs the migration schematics;
+  a hand bump silently skips them.
+- **After every major**, skim the release notes for new extended diagnostics and deprecations — fix
+  warnings the same day they appear (this repo builds warning-free; keep it that way).
+- **Out-of-band bumps** (any week): security advisories from `npm audit` on production dependencies.
+  Dev-only advisories with no upstream fix are recorded in `docs/CODE_REVIEW.md` instead of forced.
+- **Not on the Angular train:** Tailwind, TypeScript, and tooling majors are their own tasks — do them
+  separately from an Angular major so a regression has one suspect.
+
+History: reviewed on 20.3 (2026-06-30), moved to 21.2 + zoneless + native-CSS animations (2026-07-02) —
+see `docs/CODE_REVIEW.md` for the audit trail.
