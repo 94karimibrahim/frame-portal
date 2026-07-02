@@ -1,4 +1,4 @@
-import { HttpClient, provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
+﻿import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { LocaleService } from '../i18n/locale.service';
@@ -7,7 +7,7 @@ import { TenantService } from '../tenant/tenant.service';
 import { authTenantInterceptor } from './auth-tenant.interceptor';
 
 /**
- * Pins the template's cross-tenant-isolation guarantee (FRONTEND_PLAN §5): `X-Tenant` is sent **only** on
+ * Pins the template's cross-tenant-isolation guarantee (FRONTEND_PLAN Â§5): `X-Tenant` is sent **only** on
  * anonymous requests; an authenticated request carries `Authorization` and **never** `X-Tenant`, so a
  * normal user can never override the tenant baked into their token.
  */
@@ -20,7 +20,7 @@ describe('authTenantInterceptor', () => {
     token = accessToken;
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withXhr(), withInterceptors([authTenantInterceptor])),
+        provideHttpClient(withInterceptors([authTenantInterceptor])),
         provideHttpClientTesting(),
         { provide: TokenStore, useValue: { getAccessToken: () => token } },
         { provide: TenantService, useValue: { slug: () => 'acme' } },

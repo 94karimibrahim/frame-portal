@@ -1,5 +1,5 @@
-import type { MockedObject } from 'vitest';
-import { provideHttpClient, withXhr } from '@angular/common/http';
+﻿import type { MockedObject } from 'vitest';
+import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { ApiResponse, AuthResult } from '../models';
@@ -50,7 +50,7 @@ describe('AuthService', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withXhr()),
+        provideHttpClient(),
         provideHttpClientTesting(),
         AuthService,
         { provide: TokenStore, useValue: tokens },
@@ -138,7 +138,7 @@ describe('AuthService', () => {
     let restored: boolean | undefined;
     service.restoreSession().subscribe((ok) => (restored = ok));
 
-    // The stored refresh token is expired/revoked — the backend rejects the rotation.
+    // The stored refresh token is expired/revoked â€” the backend rejects the rotation.
     httpMock
       .expectOne(`${API}/auth/refresh`)
       .flush(null, { status: 401, statusText: 'Unauthorized' });

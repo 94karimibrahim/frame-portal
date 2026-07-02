@@ -1,5 +1,5 @@
-import type { Mock, MockedObject } from 'vitest';
-import { HttpClient, provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
+﻿import type { Mock, MockedObject } from 'vitest';
+import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
@@ -20,7 +20,7 @@ const authResult: AuthResult = {
 
 /**
  * Covers the single-flight 401 refresh: one rotation shared across concurrent failures, a transparent
- * retry of the original request, and — when refresh itself fails — session clear + redirect to login.
+ * retry of the original request, and â€” when refresh itself fails â€” session clear + redirect to login.
  */
 describe('refreshInterceptor', () => {
   let http: HttpClient;
@@ -42,7 +42,7 @@ describe('refreshInterceptor', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withXhr(), withInterceptors([refreshInterceptor])),
+        provideHttpClient(withInterceptors([refreshInterceptor])),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: auth },
         { provide: TokenStore, useValue: { hasRefreshToken: () => hasRefreshToken } },
