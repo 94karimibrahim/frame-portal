@@ -146,7 +146,7 @@ export interface RoleDialogInput {
                 <input
                   type="checkbox"
                   formControlName="isActive"
-                  class="h-4 w-4 rounded border-gray-300 text-brand-500"
+                  class="h-4 w-4 rounded-sm border-gray-300 text-brand-500"
                 />
                 <span class="text-theme-sm text-gray-700 dark:text-gray-200">{{
                   'roles.active' | transloco
@@ -165,7 +165,7 @@ export interface RoleDialogInput {
                   <label class="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      class="h-4 w-4 rounded border-gray-300 text-brand-500"
+                      class="h-4 w-4 rounded-sm border-gray-300 text-brand-500"
                       [checked]="isModuleFull(group)"
                       [indeterminate]="isModulePartial(group)"
                       (change)="toggleModule(group, $any($event.target).checked)"
@@ -180,7 +180,7 @@ export interface RoleDialogInput {
                       <label class="flex items-center gap-2">
                         <input
                           type="checkbox"
-                          class="h-4 w-4 rounded border-gray-300 text-brand-500"
+                          class="h-4 w-4 rounded-sm border-gray-300 text-brand-500"
                           [checked]="selected().has(permission.code)"
                           (change)="toggle(permission.code)"
                         />

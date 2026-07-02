@@ -40,7 +40,7 @@ interface Command {
   template: `
     @if (palette.opened()) {
       <div
-        class="fixed inset-0 z-[100] flex items-start justify-center p-4 pt-[12vh]"
+        class="fixed inset-0 z-100 flex items-start justify-center p-4 pt-[12vh]"
         role="dialog"
         aria-modal="true"
         [attr.aria-label]="'commandPalette.title' | transloco"
@@ -81,7 +81,7 @@ interface Command {
               [attr.aria-activedescendant]="flat().length ? 'command-option-' + active() : null"
               [attr.aria-label]="'commandPalette.placeholder' | transloco"
               [placeholder]="'commandPalette.placeholder' | transloco"
-              class="w-full bg-transparent py-4 text-theme-sm text-gray-900 placeholder:text-gray-400 focus:outline-none dark:text-gray-100"
+              class="w-full bg-transparent py-4 text-theme-sm text-gray-900 placeholder:text-gray-400 focus:outline-hidden dark:text-gray-100"
               [value]="query()"
               (input)="onSearch($event)"
               (keydown.arrowDown)="move(1, $event)"

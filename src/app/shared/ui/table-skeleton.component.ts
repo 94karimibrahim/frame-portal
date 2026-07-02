@@ -19,8 +19,8 @@ import { SkeletonComponent } from './skeleton.component';
   imports: [TranslocoModule, SkeletonComponent],
   template: `
     <div class="overflow-x-auto" aria-busy="true" [attr.aria-label]="'common.loading' | transloco">
-      <table class="w-full min-w-[40rem] border-collapse">
-        <thead class="bg-gray-50 dark:bg-white/[0.02]">
+      <table class="w-full min-w-160 border-collapse">
+        <thead class="bg-gray-50 dark:bg-white/2">
           <tr class="border-b border-gray-200 dark:border-gray-800">
             @for (col of colSpan(); track $index) {
               <th class="px-4 py-3.5 text-start">

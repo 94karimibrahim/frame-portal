@@ -20,7 +20,7 @@ import {
   template: `
     @if (active()) {
       <div
-        class="pointer-events-none fixed inset-x-0 top-0 z-[110] h-0.5 overflow-hidden bg-brand-500/20"
+        class="pointer-events-none fixed inset-x-0 top-0 z-110 h-0.5 overflow-hidden bg-brand-500/20"
         aria-hidden="true"
       >
         <div

@@ -15,7 +15,7 @@ import { TranslocoModule } from '@jsverse/transloco';
   imports: [A11yModule, TranslocoModule],
   template: `
     <div
-      class="fixed inset-0 z-[90] flex justify-end"
+      class="fixed inset-0 z-90 flex justify-end"
       role="dialog"
       aria-modal="true"
       [attr.aria-label]="title()"

@@ -78,7 +78,7 @@ import { LayoutService } from './layout.service';
         </svg>
         <span>{{ 'commandPalette.trigger' | transloco }}</span>
         <kbd
-          class="rounded border border-gray-200 px-1.5 py-0.5 text-theme-xs font-medium dark:border-gray-700"
+          class="rounded-sm border border-gray-200 px-1.5 py-0.5 text-theme-xs font-medium dark:border-gray-700"
         >
           ⌘K
         </kbd>
@@ -155,7 +155,7 @@ import { LayoutService } from './layout.service';
             tabindex="-1"
             cdkTrapFocus
             [cdkTrapFocusAutoCapture]="true"
-            class="absolute end-0 z-50 mt-2 w-44 overflow-hidden rounded-theme-lg border border-gray-200 bg-white py-1 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
+            class="absolute inset-e-0 z-50 mt-2 w-44 overflow-hidden rounded-theme-lg border border-gray-200 bg-white py-1 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
             (keydown.escape)="themeMenuOpen.set(false)"
           >
             @for (opt of themeOptions; track opt.mode) {
@@ -240,7 +240,7 @@ import { LayoutService } from './layout.service';
             tabindex="-1"
             cdkTrapFocus
             [cdkTrapFocusAutoCapture]="true"
-            class="absolute end-0 z-50 mt-2 w-60 overflow-hidden rounded-theme-lg border border-gray-200 bg-white py-1 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
+            class="absolute inset-e-0 z-50 mt-2 w-60 overflow-hidden rounded-theme-lg border border-gray-200 bg-white py-1 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
             (keydown.escape)="menuOpen.set(false)"
           >
             <div

@@ -14,7 +14,7 @@ import { NotificationService } from '../../core/notifications/notification.servi
   imports: [TranslocoModule],
   template: `
     <div
-      class="pointer-events-none fixed top-4 end-4 z-[100] flex w-full max-w-sm flex-col gap-3"
+      class="pointer-events-none fixed top-4 inset-e-4 z-100 flex w-full max-w-sm flex-col gap-3"
       aria-live="polite"
       aria-atomic="false"
     >
@@ -41,7 +41,7 @@ import { NotificationService } from '../../core/notifications/notification.servi
               {{ toast.title }}
             </p>
             @if (toast.text) {
-              <p class="mt-0.5 break-words text-theme-xs text-gray-500 dark:text-gray-400">
+              <p class="mt-0.5 wrap-break-word text-theme-xs text-gray-500 dark:text-gray-400">
                 {{ toast.text }}
               </p>
             }

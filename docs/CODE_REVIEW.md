@@ -135,7 +135,19 @@ unit **77/77** ✅ with coverage gate passing (63.4/58.8/52.8/64.2 vs 60/55/50/6
 Playwright **5/5** ✅ · `npm audit --omit=dev` 0 vulnerabilities. Note: the 3 low dev-only
 `@babel/core` advisories were **not** cleared by v21 as hoped — still upstream-only, accepted.
 
-Still open from M-3's orbit: Tailwind 4 (own task) and writing down the quarterly `ng update` policy.
+Still open from M-3's orbit: nothing — the quarterly `ng update` policy is written down
+(USING-AS-A-TEMPLATE.md §6) and Tailwind 4 landed (below).
+
+**2026-07-02, Tailwind 4:** upgraded 3.4.19 → 4.3.2 with `npx @tailwindcss/upgrade` on
+`upgrade/tailwind-4`. `tailwind.config.js` is gone — the TailAdmin tokens are now the `@theme` block in
+`src/styles.css`; the dark class variant is a `@custom-variant`; component classes converted to
+`@utility`; 18 inline templates rewritten for v4 renames; `@tailwindcss/postcss` replaces
+`tailwindcss`+`autoprefixer` in `.postcssrc.json`. The tool added the v3-compat default-border-color
+layer (gray-200) — keep it until every border has an explicit color. Verified: lint + Prettier ✅,
+build ✅ (387.60 kB raw / 103.77 kB transfer), 77/77 unit + gate ✅, 5/5 Playwright ✅, plus a manual
+rendered screenshot check of the login page in light **and** dark (an initial "dark inputs render
+light" scare was a probe artifact — the screenshot raced `.form-input`'s 150 ms background
+transition).
 
 **2026-07-02, later still:** the app is **zoneless** — `provideZonelessChangeDetection()` replaces
 `provideZoneChangeDetection` (the codebase was already 100% OnPush + signals). `zone.js` is out of the

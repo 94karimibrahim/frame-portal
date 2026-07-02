@@ -411,7 +411,8 @@ feature, matching the C# records exactly.
 ## 13. TailAdmin Free vs Pro audit
 
 **Extract from TailAdmin Free (layout + tokens only):** sidebar shell + collapse behavior, topbar/header,
-dark-mode toggle + theme tokens, `tailwind.config` design tokens (colors, spacing, radius, shadows), global
+dark-mode toggle + theme tokens, the design tokens (colors, spacing, radius, shadows — now the `@theme`
+block in `src/styles.css` since Tailwind 4), global
 CSS, and the visual language of cards / badges / stat widgets / form controls / basic tables / modals / alerts /
 dropdowns / breadcrumbs.
 
@@ -473,7 +474,7 @@ client/
    localized message; special-case text/plain IP 403 and bodyless 429.
 
 ## 18. Theming matrix (light/dark × LTR/RTL)
-Driven by `tailwind.config` tokens + a `dir`/`lang` attribute on `<html>`. **Tailwind logical properties only**
+Driven by the `@theme` tokens in `src/styles.css` + a `dir`/`lang` attribute on `<html>`. **Tailwind logical properties only**
 (`ps-/pe-`, `ms-/me-`, `start-/end-`, `rtl:`/`ltr:` variants). All four quadrants
 (light-LTR, light-RTL, dark-LTR, dark-RTL) are an **acceptance criterion**, with an automated RTL render check.
 

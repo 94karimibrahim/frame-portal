@@ -168,9 +168,9 @@ export class UserActionsCellComponent {
 
   /** Shared menu-item layout; the destructive item swaps in error tones. */
   protected readonly itemClass =
-    'flex w-full items-center gap-2.5 rounded-theme-sm px-3 py-2 text-start text-theme-sm text-gray-700 outline-none hover:bg-gray-50 focus:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800 dark:focus:bg-gray-800';
+    'flex w-full items-center gap-2.5 rounded-theme-sm px-3 py-2 text-start text-theme-sm text-gray-700 outline-hidden hover:bg-gray-50 focus:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800 dark:focus:bg-gray-800';
   protected readonly dangerItemClass =
-    'flex w-full items-center gap-2.5 rounded-theme-sm px-3 py-2 text-start text-theme-sm text-error-600 outline-none hover:bg-error-50 focus:bg-error-50 dark:text-error-500 dark:hover:bg-error-500/10 dark:focus:bg-error-500/10';
+    'flex w-full items-center gap-2.5 rounded-theme-sm px-3 py-2 text-start text-theme-sm text-error-600 outline-hidden hover:bg-error-50 focus:bg-error-50 dark:text-error-500 dark:hover:bg-error-500/10 dark:focus:bg-error-500/10';
 
   protected get user(): UserListItem {
     return this.ctx.row.original;

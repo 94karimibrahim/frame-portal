@@ -156,7 +156,7 @@ const TOGGLE_GROUPS = [
                     <input
                       type="checkbox"
                       [formControlName]="field.key"
-                      class="h-4 w-4 rounded border-gray-300 text-brand-500"
+                      class="h-4 w-4 rounded-sm border-gray-300 text-brand-500"
                     />
                   </label>
                 }

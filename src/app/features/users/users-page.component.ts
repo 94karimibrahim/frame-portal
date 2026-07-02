@@ -123,7 +123,7 @@ interface StatusChip {
             <button
               type="button"
               class="btn btn-secondary px-3 py-1.5"
-              [class.!border-brand-500]="filtersOpen() || filterCount() > 0"
+              [class.border-brand-500!]="filtersOpen() || filterCount() > 0"
               [attr.aria-expanded]="filtersOpen()"
               (click)="filtersOpen.set(!filtersOpen())"
             >
@@ -160,7 +160,7 @@ interface StatusChip {
               </button>
               @if (sortMenu()) {
                 <div
-                  class="absolute end-0 top-11 z-10 w-44 rounded-theme-md border border-gray-200 bg-white p-1 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
+                  class="absolute inset-e-0 top-11 z-10 w-44 rounded-theme-md border border-gray-200 bg-white p-1 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
                 >
                   @for (s of sortFields; track s.key) {
                     <button
@@ -216,7 +216,7 @@ interface StatusChip {
             @for (col of searchCols; track col.key) {
               <div class="relative">
                 <span
-                  class="pointer-events-none absolute inset-y-0 start-3 flex items-center text-gray-400"
+                  class="pointer-events-none absolute inset-y-0 inset-s-3 flex items-center text-gray-400"
                 >
                   <svg
                     class="h-4 w-4"
@@ -237,7 +237,7 @@ interface StatusChip {
                   type="search"
                   [formControl]="col.control"
                   [placeholder]="col.labelKey | transloco"
-                  class="form-input ps-9 !py-2"
+                  class="form-input ps-9 py-2!"
                 />
               </div>
             }

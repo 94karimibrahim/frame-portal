@@ -21,7 +21,7 @@ import { LayoutService } from './layout.service';
   imports: [NgClass, RouterLink, RouterLinkActive, TranslocoModule],
   template: `
     <aside
-      class="custom-scrollbar fixed inset-y-0 start-0 z-50 flex flex-col overflow-y-auto border-e border-gray-200 bg-white transition-all duration-300 ease-in-out dark:border-gray-800 dark:bg-gray-dark lg:sticky lg:top-0 lg:h-screen lg:translate-x-0"
+      class="custom-scrollbar fixed inset-y-0 inset-s-0 z-50 flex flex-col overflow-y-auto border-e border-gray-200 bg-white transition-all duration-300 ease-in-out dark:border-gray-800 dark:bg-gray-dark lg:sticky lg:top-0 lg:h-screen lg:translate-x-0"
       [ngClass]="{
         'w-72': !layout.collapsed(),
         'lg:w-20': layout.collapsed(),
@@ -60,7 +60,7 @@ import { LayoutService } from './layout.service';
                 <li>
                   <a
                     [routerLink]="item.link"
-                    routerLinkActive="bg-brand-50 font-semibold text-brand-600 before:absolute before:inset-y-1.5 before:start-0 before:w-1 before:rounded-e-full before:bg-brand-500 before:content-[''] dark:bg-brand-500/10 dark:text-brand-400"
+                    routerLinkActive="bg-brand-50 font-semibold text-brand-600 before:absolute before:inset-y-1.5 before:inset-s-0 before:w-1 before:rounded-e-full before:bg-brand-500 before:content-[''] dark:bg-brand-500/10 dark:text-brand-400"
                     class="group relative flex items-center gap-3 rounded-theme-md px-3 py-2.5 text-theme-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
                     [ngClass]="{ 'lg:justify-center': layout.collapsed() }"
                     [attr.title]="layout.collapsed() ? (item.labelKey | transloco) : null"

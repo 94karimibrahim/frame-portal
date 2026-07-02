@@ -36,7 +36,7 @@ interface OptionGroup {
       <!-- Trigger -->
       <button
         type="button"
-        class="form-input flex min-h-[2.75rem] w-full flex-wrap items-center gap-1.5 text-start"
+        class="form-input flex min-h-11 w-full flex-wrap items-center gap-1.5 text-start"
         [attr.aria-haspopup]="'listbox'"
         [attr.aria-expanded]="open()"
         [attr.aria-label]="ariaLabel() || null"
@@ -111,7 +111,7 @@ interface OptionGroup {
             <input
               #search
               type="search"
-              class="form-input !py-2"
+              class="form-input py-2!"
               [placeholder]="searchPlaceholder() || ('multiSelect.searchPlaceholder' | transloco)"
               [attr.aria-label]="'common.search' | transloco"
               [value]="query()"
@@ -164,7 +164,7 @@ interface OptionGroup {
                 >
                   <input
                     type="checkbox"
-                    class="h-4 w-4 rounded border-gray-300 text-brand-500"
+                    class="h-4 w-4 rounded-sm border-gray-300 text-brand-500"
                     [checked]="isSelected(opt.value)"
                     (change)="toggle(opt.value)"
                   />

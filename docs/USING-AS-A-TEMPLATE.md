@@ -140,8 +140,8 @@ wiring edits (§2) and you're done. The generated code already follows the house
 
 ## 5. Don't forget
 
-- **Branding:** `index.html` `<title>`, `public/favicon.ico`, the Tailwind brand palette in
-  `tailwind.config.js`, and the app name in `package.json` / `README.md`.
+- **Branding:** `index.html` `<title>`, `public/favicon.ico`, the Tailwind brand palette in the
+  `@theme` block of `src/styles.css`, and the app name in `package.json` / `README.md`.
 - **Environments:** point `apiBaseUrl` at your API and set your real OAuth client IDs in
   `src/environments/*` (secrets stay on the backend — see `environment.types.ts`).
 - **Security headers:** ship the CSP from the README "Deployment & security headers" section /

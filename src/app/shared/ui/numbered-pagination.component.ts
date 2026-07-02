@@ -20,7 +20,7 @@ type PageEntry = number | null;
         <label [attr.for]="'rows-per-page'">{{ 'pagination.rows' | transloco }}</label>
         <select
           id="rows-per-page"
-          class="form-input !w-auto !py-1 !text-theme-xs"
+          class="form-input w-auto! py-1! text-theme-xs!"
           [value]="pageSize()"
           (change)="onSize($event)"
         >

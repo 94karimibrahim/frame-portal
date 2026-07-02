@@ -76,7 +76,7 @@ import {
               tabindex="-1"
               cdkTrapFocus
               [cdkTrapFocusAutoCapture]="true"
-              class="absolute end-0 z-50 mt-2 w-56 rounded-theme-lg border border-gray-200 bg-white p-1.5 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
+              class="absolute inset-e-0 z-50 mt-2 w-56 rounded-theme-lg border border-gray-200 bg-white p-1.5 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
               (keydown.escape)="columnsMenuOpen.set(false)"
             >
               @for (col of hideableColumns(); track col.id) {
@@ -85,7 +85,7 @@ import {
                 >
                   <input
                     type="checkbox"
-                    class="h-4 w-4 rounded border-gray-300 text-brand-500"
+                    class="h-4 w-4 rounded-sm border-gray-300 text-brand-500"
                     [checked]="col.getIsVisible()"
                     (change)="col.toggleVisibility(isChecked($event))"
                   />
@@ -99,15 +99,15 @@ import {
     }
 
     <div class="overflow-x-auto">
-      <table class="w-full min-w-[40rem] border-collapse text-start">
-        <thead class="bg-gray-50 dark:bg-white/[0.02]">
+      <table class="w-full min-w-160 border-collapse text-start">
+        <thead class="bg-gray-50 dark:bg-white/2">
           @for (headerGroup of table.getHeaderGroups(); track headerGroup.id) {
             <tr class="border-b border-gray-200 dark:border-gray-800">
               @if (selectable()) {
                 <th class="w-10 py-3.5 ps-6 pe-4 text-start">
                   <input
                     type="checkbox"
-                    class="h-4 w-4 rounded border-gray-300 text-brand-500"
+                    class="h-4 w-4 rounded-sm border-gray-300 text-brand-500"
                     [checked]="table.getIsAllPageRowsSelected()"
                     [indeterminate]="table.getIsSomePageRowsSelected()"
                     [attr.aria-label]="'table.selectAll' | transloco"
@@ -151,7 +151,7 @@ import {
                 <td class="py-3 ps-6 pe-4" (click)="$event.stopPropagation()">
                   <input
                     type="checkbox"
-                    class="h-4 w-4 rounded border-gray-300 text-brand-500 disabled:opacity-40"
+                    class="h-4 w-4 rounded-sm border-gray-300 text-brand-500 disabled:opacity-40"
                     [checked]="row.getIsSelected()"
                     [disabled]="!row.getCanSelect()"
                     [attr.aria-label]="'table.selectRow' | transloco"
@@ -258,7 +258,7 @@ export class DataTableComponent<TRow> {
   protected rowClass(row: Row<TRow>): string {
     const base = 'border-b border-gray-100 transition dark:border-gray-800/60';
     return row.getIsSelected()
-      ? `${base} bg-brand-50/60 dark:bg-brand-500/[0.06]`
+      ? `${base} bg-brand-50/60 dark:bg-brand-500/6`
       : `${base} hover:bg-gray-100 dark:hover:bg-white/5`;
   }
 
