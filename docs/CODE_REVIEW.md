@@ -224,6 +224,16 @@ suite runs in ~6 s instead of a browser launch. Notes:
 Verified: lint + Prettier ✅ · prod build unchanged (403.16 kB / 100.51 kB, warning-free) ✅ ·
 **90/90** Vitest with native coverage thresholds ✅ · **5/5** Playwright ✅.
 
+## Addendum — 2026-07-02: eslint 10
+
+The deferred lint-stack major, taken once its compatibility matrix aligned: typescript-eslint 8.62.1
+and angular-eslint 22.0.0 both peer-accept eslint ^10, so this was a one-package bump. `ng lint`
+passes with **zero rule changes**. One latent bug surfaced: `eslint.config.js` requires `@eslint/js`,
+which had only ever been available as eslint 9's hoisted transitive dependency — eslint 10 no longer
+provides it, so it is now a **direct devDependency** (`@eslint/js` 10.0.1, versioned independently of
+eslint itself since 10.0). The Dependabot semver-major ignore for eslint stays — the next major is
+manual again, together with whatever the typescript-eslint/angular-eslint matrix requires then.
+
 ## Final Verdict
 
 **Ready, pending H-2.** Architecturally there is nothing to refactor; the security-critical core is tested;
