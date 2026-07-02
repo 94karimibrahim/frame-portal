@@ -32,7 +32,7 @@ import { ICONS } from '../../shared/icons';
       class="overflow-hidden rounded-theme-lg bg-linear-to-br from-brand-500 to-brand-700 p-6 text-white shadow-theme-sm sm:p-8"
     >
       <h1 class="text-title-md font-semibold">
-        {{ 'dashboard.greeting' | transloco: { name: auth.identity()?.fullName } }}
+        {{ 'dashboard.greeting' | transloco: { name: auth.identity()?.fullName ?? '' } }}
       </h1>
       <p class="mt-1 max-w-2xl text-theme-sm text-white/80">
         {{ 'dashboard.subtitle' | transloco }}

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { AuthService } from '../../core/auth/auth.service';
 import { HasPermissionDirective } from './has-permission.directive';
@@ -6,6 +6,9 @@ import { HasPermissionDirective } from './has-permission.directive';
 @Component({
   standalone: true,
   imports: [HasPermissionDirective],
+  // The v22 migration stamped `Eager` here to preserve pre-22 defaults; the directive is
+  // signal-driven, so the house-wide OnPush (enforced by lint) behaves identically.
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `<span *appHasPermission="'users.list'">SECRET</span>`,
 })
 class HostComponent {}

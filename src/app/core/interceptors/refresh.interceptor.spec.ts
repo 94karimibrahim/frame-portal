@@ -1,4 +1,4 @@
-import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpClient, provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
@@ -36,7 +36,7 @@ describe('refreshInterceptor', () => {
 
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withInterceptors([refreshInterceptor])),
+        provideHttpClient(withXhr(), withInterceptors([refreshInterceptor])),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: auth },
         { provide: TokenStore, useValue: { hasRefreshToken: () => hasRefreshToken } },

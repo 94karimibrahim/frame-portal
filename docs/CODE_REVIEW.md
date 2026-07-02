@@ -172,6 +172,33 @@ with CSS keyframes in `styles.css`; reduced-motion is handled once by the global
 471.28 → 412.62 kB raw (129.95 → 114.25 kB transfer). Re-verified: lint ✅, build ✅ (no warnings),
 77/77 unit + coverage gate ✅, 5/5 Playwright ✅.
 
+## Addendum — 2026-07-02: Angular 22 (the policy's first exercise)
+
+`ng update @angular/core@22 @angular/cli@22 @angular/cdk@22 angular-eslint@22` ran on
+`upgrade/angular-22` — the first upgrade done under the §6 policy, one day after writing it. Now on
+Angular 22.0.5 / CDK 22.0.3 / angular-eslint 22.0.0 / **TypeScript 6.0.3** (required by v22, so it
+rides the framework train). Notes for the next upgrader:
+
+- **Node floor is real:** CLI 22 requires Node ≥ 22.22.3. This machine moved 22.18 → 22.23.1 (winget),
+  and the template's baseline rose with it: `engines` ≥ 22.22, `.nvmrc` 22, README, and both CI jobs
+  (Node 20 → 22 — CI would have hard-failed otherwise). The raised baseline also unblocked
+  **lint-staged 17** (declined as #8 when the floor was 20).
+- **Migrations reviewed, not just accepted:** `withXhr()` pins the pre-v22 XHR transport (moving to the
+  new fetch default is a future deliberate change); the `$safeNavigationMigration()` marker (template
+  `?.` now yields `undefined`, not `null`) was resolved to an explicit `?? ''` in the dashboard; the
+  migration's suppression of the now-default `nullishCoalescingNotNullable`/`optionalChainNotNullable`
+  diagnostics was **removed** — the build is warning-free without it.
+- **v22 `CanMatchFn` gained a third `currentSnapshot` parameter** — app code was unaffected but
+  `guards.spec.ts` invokes the typed guards directly; seven callsites now pass a stub.
+- Two `ng update` attempts failed on npm-cache integrity corruption; a fresh `npm_config_cache` dir
+  fixed it.
+- Optional v22 migrations deliberately **not** taken yet: Karma → Vitest unit-test builder (own task —
+  worth it, Karma is sunsetting) and the `use-application-builder` no-op.
+
+Verified on 22: lint + Prettier ✅ · build ✅ warning-free, 403.16 kB raw / **100.51 kB transfer**
+(budget 550 kB) · **90/90** unit + coverage gate (65.3/58.3/56.8/66.1 vs 63/56/54/64 floors) ✅ ·
+**5/5** Playwright ✅ · `npm audit --omit=dev` 0 vulnerabilities (3 dev-only lows persist upstream).
+
 ## Final Verdict
 
 **Ready, pending H-2.** Architecturally there is nothing to refactor; the security-critical core is tested;

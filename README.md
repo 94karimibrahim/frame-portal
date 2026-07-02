@@ -4,7 +4,7 @@ A production Angular SPA for the Frame backend: multi-tenant identity & access m
 (users, roles, permissions, departments, tenant administration, and a self-service security
 center) with runtime English↔Arabic localization and full light/dark × LTR/RTL theming.
 
-- **Stack:** Angular 21 (standalone components, signals, typed reactive forms, lazy routes via
+- **Stack:** Angular 22 (standalone components, signals, typed reactive forms, lazy routes via
   `canMatch`), Tailwind CSS (TailAdmin tokens), Angular CDK, TanStack Table, Transloco, Jasmine/Karma.
 - **No NgModules.** Every component is standalone; state is signals + feature services.
 
@@ -24,7 +24,7 @@ npm run new:feature -- reports   # generates an idiomatic feature + prints the w
 
 ## Prerequisites
 
-- Node 20+ and npm.
+- Node 22.22+ and npm (Angular 22's floor; `.nvmrc` pins the major).
 - The Frame API running locally. By default the dev build points at `http://localhost:49154/api`
   (see `src/environments/environment.development.ts`); `:4200` and `:5173` are allowed CORS origins.
 - Seeded login (local): tenant `default`, `admin@frame.local` / `ChangeMe!123`.

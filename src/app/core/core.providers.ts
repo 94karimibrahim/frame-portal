@@ -1,5 +1,5 @@
 import { EnvironmentProviders, Provider, inject, provideAppInitializer } from '@angular/core';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth/auth.service';
@@ -18,6 +18,7 @@ import { errorInterceptor } from './interceptors/error.interceptor';
 export function provideCore(): (Provider | EnvironmentProviders)[] {
   return [
     provideHttpClient(
+      withXhr(),
       withInterceptors([errorInterceptor, refreshInterceptor, authTenantInterceptor]),
     ),
     ...provideAppTransloco(),

@@ -1,4 +1,4 @@
-import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpClient, provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { LocaleService } from '../i18n/locale.service';
@@ -20,7 +20,7 @@ describe('authTenantInterceptor', () => {
     token = accessToken;
     TestBed.configureTestingModule({
       providers: [
-        provideHttpClient(withInterceptors([authTenantInterceptor])),
+        provideHttpClient(withXhr(), withInterceptors([authTenantInterceptor])),
         provideHttpClientTesting(),
         { provide: TokenStore, useValue: { getAccessToken: () => token } },
         { provide: TenantService, useValue: { slug: () => 'acme' } },
