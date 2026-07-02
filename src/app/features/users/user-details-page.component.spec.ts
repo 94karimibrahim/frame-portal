@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
@@ -69,21 +70,24 @@ interface DetailsApi {
 describe('UserDetailsPageComponent', () => {
   let fixture: ComponentFixture<UserDetailsPageComponent>;
   let api: DetailsApi;
-  let service: jasmine.SpyObj<UserService>;
-  let notify: jasmine.SpyObj<NotificationService>;
+  let service: MockedObject<UserService>;
+  let notify: MockedObject<NotificationService>;
   let router: Router;
 
   beforeEach(() => {
-    service = jasmine.createSpyObj<UserService>('UserService', [
-      'get',
-      'getRoles',
-      'unlock',
-      'resetPassword',
-      'remove',
-    ]);
-    service.get.and.returnValue(of(baseUser));
-    service.getRoles.and.returnValue(of([role]));
-    notify = jasmine.createSpyObj<NotificationService>('NotificationService', ['success', 'error']);
+    service = {
+      get: vi.fn().mockName('UserService.get'),
+      getRoles: vi.fn().mockName('UserService.getRoles'),
+      unlock: vi.fn().mockName('UserService.unlock'),
+      resetPassword: vi.fn().mockName('UserService.resetPassword'),
+      remove: vi.fn().mockName('UserService.remove'),
+    } as unknown as MockedObject<UserService>;
+    service.get.mockReturnValue(of(baseUser));
+    service.getRoles.mockReturnValue(of([role]));
+    notify = {
+      success: vi.fn().mockName('NotificationService.success'),
+      error: vi.fn().mockName('NotificationService.error'),
+    } as unknown as MockedObject<NotificationService>;
 
     // Minimal AuthService: what the page (guarded/guardTitle) and *appHasPermission consume.
     const auth = {
@@ -112,7 +116,7 @@ describe('UserDetailsPageComponent', () => {
     fixture = TestBed.createComponent(UserDetailsPageComponent);
     api = fixture.componentInstance as unknown as DetailsApi;
     router = TestBed.inject(Router);
-    spyOn(router, 'navigate').and.resolveTo(true);
+    vi.spyOn(router, 'navigate').mockResolvedValue(true);
     fixture.detectChanges();
   }
 
@@ -121,7 +125,7 @@ describe('UserDetailsPageComponent', () => {
 
     expect(service.get).toHaveBeenCalledWith('u1');
     expect(service.getRoles).toHaveBeenCalledWith('u1');
-    expect(api.loadingUser()).toBeFalse();
+    expect(api.loadingUser()).toBe(false);
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Amina Hassan');
     expect(text).toContain('amina@example.com');
@@ -129,47 +133,47 @@ describe('UserDetailsPageComponent', () => {
   });
 
   it('shows the error empty state when the user cannot be loaded (bad deep link)', () => {
-    service.get.and.returnValue(throwError(() => new Error('404')));
-    service.getRoles.and.returnValue(throwError(() => new Error('404')));
+    service.get.mockReturnValue(throwError(() => new Error('404')));
+    service.getRoles.mockReturnValue(throwError(() => new Error('404')));
     create();
 
     expect(api.user()).toBeNull();
-    expect(api.loadingUser()).toBeFalse();
+    expect(api.loadingUser()).toBe(false);
     // Missing i18n keys render as the key itself under TranslocoTestingModule.
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('users.detailError');
   });
 
   it('guards admin actions on system accounts, with the explaining tooltip', () => {
-    service.get.and.returnValue(of({ ...baseUser, isSystem: true }));
+    service.get.mockReturnValue(of({ ...baseUser, isSystem: true }));
     create();
 
-    expect(api.guarded()).toBeTrue();
+    expect(api.guarded()).toBe(true);
     expect(api.guardTitle()).toBe('users.systemUserHint');
   });
 
   it('guards admin actions on your own account', () => {
-    service.get.and.returnValue(of({ ...baseUser, id: 'me' }));
+    service.get.mockReturnValue(of({ ...baseUser, id: 'me' }));
     create();
 
-    expect(api.guarded()).toBeTrue();
+    expect(api.guarded()).toBe(true);
     expect(api.guardTitle()).toBe('users.selfActionHint');
   });
 
   it('unlock clears the lockout locally (badge + action drop away) and toasts', () => {
-    service.unlock.and.returnValue(of(undefined));
+    service.unlock.mockReturnValue(of(undefined));
     create();
-    expect(api.user()?.isLockedOut).toBeTrue();
+    expect(api.user()?.isLockedOut).toBe(true);
 
     api.confirmUnlock();
 
     expect(service.unlock).toHaveBeenCalledWith('u1');
-    expect(api.user()?.isLockedOut).toBeFalse();
+    expect(api.user()?.isLockedOut).toBe(false);
     expect(api.user()?.lockoutEnd).toBeNull();
     expect(notify.success).toHaveBeenCalled();
   });
 
   it('delete removes the user and returns to the list', () => {
-    service.remove.and.returnValue(of(undefined));
+    service.remove.mockReturnValue(of(undefined));
     create();
 
     api.confirmDelete();

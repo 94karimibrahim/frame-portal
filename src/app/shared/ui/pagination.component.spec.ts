@@ -67,7 +67,7 @@ describe('PaginationComponent', () => {
       hasNext: true,
     });
     const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll('button');
-    expect((buttons[0] as HTMLButtonElement).disabled).toBeTrue();
+    expect((buttons[0] as HTMLButtonElement).disabled).toBe(true);
 
     let emitted: number | undefined;
     fixture.componentInstance.pageChange.subscribe((p) => (emitted = p));

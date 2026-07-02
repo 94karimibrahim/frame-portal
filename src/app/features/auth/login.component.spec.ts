@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { TranslocoTestingModule } from '@jsverse/transloco';
@@ -26,11 +27,13 @@ function transloco() {
 describe('LoginComponent', () => {
   let fixture: ComponentFixture<LoginComponent>;
   let component: LoginComponent;
-  let auth: jasmine.SpyObj<AuthService>;
+  let auth: MockedObject<AuthService>;
   let router: Router;
 
   beforeEach(async () => {
-    auth = jasmine.createSpyObj<AuthService>('AuthService', ['login']);
+    auth = {
+      login: vi.fn().mockName('AuthService.login'),
+    } as unknown as MockedObject<AuthService>;
 
     await TestBed.configureTestingModule({
       imports: [LoginComponent, transloco()],
@@ -40,16 +43,24 @@ describe('LoginComponent', () => {
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
     router = TestBed.inject(Router);
-    spyOn(router, 'navigateByUrl').and.resolveTo(true);
-    spyOn(router, 'navigate').and.resolveTo(true);
+    vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    vi.spyOn(router, 'navigate').mockResolvedValue(true);
     fixture.detectChanges();
   });
 
   function form() {
-    return (component as unknown as { form: import('@angular/forms').FormGroup }).form;
+    return (
+      component as unknown as {
+        form: import('@angular/forms').FormGroup;
+      }
+    ).form;
   }
   function submit() {
-    (component as unknown as { submit: () => void }).submit();
+    (
+      component as unknown as {
+        submit: () => void;
+      }
+    ).submit();
   }
 
   it('does not call login when the form is invalid', () => {
@@ -58,12 +69,14 @@ describe('LoginComponent', () => {
   });
 
   it('navigates to the return url on a successful login', () => {
-    auth.login.and.returnValue(of(authResult));
+    auth.login.mockReturnValue(of(authResult));
     form().patchValue({ email: 'user@example.com', password: 'secret12' });
 
     submit();
 
-    expect(auth.login).toHaveBeenCalledOnceWith({
+    expect(auth.login).toHaveBeenCalledTimes(1);
+
+    expect(auth.login).toHaveBeenCalledWith({
       email: 'user@example.com',
       password: 'secret12',
     });
@@ -79,7 +92,7 @@ describe('LoginComponent', () => {
       retryAfterSeconds: null,
       correlationId: null,
     };
-    auth.login.and.returnValue(throwError(() => err));
+    auth.login.mockReturnValue(throwError(() => err));
     form().patchValue({ email: 'user@example.com', password: 'secret12' });
 
     submit();
@@ -99,7 +112,7 @@ describe('LoginComponent', () => {
       retryAfterSeconds: null,
       correlationId: null,
     };
-    auth.login.and.returnValue(throwError(() => err));
+    auth.login.mockReturnValue(throwError(() => err));
     form().patchValue({ email: 'bad@example.com', password: 'secret12' });
 
     submit();

@@ -1,4 +1,4 @@
-﻿import { TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { UrlSegment, UrlTree, provideRouter } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { authGuard, guestGuard } from './auth.guard';
@@ -25,7 +25,7 @@ describe('authGuard', () => {
     const result = TestBed.runInInjectionContext(() =>
       authGuard({} as never, [seg('users')], {} as never),
     );
-    expect(result instanceof UrlTree).toBeTrue();
+    expect(result instanceof UrlTree).toBe(true);
     const tree = (result as UrlTree).toString();
     expect(tree).toContain('/auth/login');
     expect(tree).toContain('returnUrl');
@@ -36,7 +36,7 @@ describe('guestGuard', () => {
   it('sends an authenticated user to the dashboard', () => {
     provideAuth({ isAuthenticated: (() => true) as AuthService['isAuthenticated'] });
     const result = TestBed.runInInjectionContext(() => guestGuard({} as never, [], {} as never));
-    expect(result instanceof UrlTree).toBeTrue();
+    expect(result instanceof UrlTree).toBe(true);
   });
 
   it('lets an anonymous user reach a public page', () => {

@@ -199,6 +199,31 @@ Verified on 22: lint + Prettier ✅ · build ✅ warning-free, 403.16 kB raw / *
 (budget 550 kB) · **90/90** unit + coverage gate (65.3/58.3/56.8/66.1 vs 63/56/54/64 floors) ✅ ·
 **5/5** Playwright ✅ · `npm audit --omit=dev` 0 vulnerabilities (3 dev-only lows persist upstream).
 
+## Addendum — 2026-07-02: Karma → Vitest (and zone.js exits entirely)
+
+The v22 optional migration, taken as its own task on `migrate/vitest`. The `test` target now runs
+`@angular/build:unit-test` with `runner: vitest` in jsdom — no browser, no `CHROME_BIN` setup, and the
+suite runs in ~6 s instead of a browser launch. Notes:
+
+- **Official schematics did most of it:** `migrate-karma-to-vitest` (config) +
+  `refactor-jasmine-vitest` (specs: `createSpyObj` → `vi.fn()` literals, `toBeTrue()` → `toBe(true)`,
+  `.and.*` → `.mock*`, `jasmine.objectContaining` → `expect.objectContaining`). Two things needed
+  hands: the spec refactorer **rewrote the Playwright smoke spec too** (its `.spec.ts` glob doesn't
+  know e2e from unit; `toHaveClass` is valid Playwright — reverted), and its partial-mock literals
+  don't satisfy `MockedObject<T>` (nine `as unknown as MockedObject<T>` casts added).
+- **The store spec's `fakeAsync` tests became Vitest fake timers** (`--fake-async` pass), which meant
+  nothing needed zone.js anymore: the zone test polyfills were removed, all 90 specs pass **zoneless —
+  the same change-detection mode as production** — and `zone.js` was uninstalled. The dependency is
+  now gone from the repository completely.
+- **The custom coverage gate retired:** the builder's native `coverageThresholds` (in `angular.json`)
+  fail the run when a floor is missed, so `tools/check-coverage.mjs` and the CI tee/gate plumbing were
+  deleted. Floors carried over (63/56/54/64); v8 measures 66.4/58.4/56.9/66.5.
+- Removed: `karma.conf.js` and nine Karma/Jasmine devDependencies. Added: `vitest`,
+  `@vitest/coverage-v8`, `jsdom`.
+
+Verified: lint + Prettier ✅ · prod build unchanged (403.16 kB / 100.51 kB, warning-free) ✅ ·
+**90/90** Vitest with native coverage thresholds ✅ · **5/5** Playwright ✅.
+
 ## Final Verdict
 
 **Ready, pending H-2.** Architecturally there is nothing to refactor; the security-critical core is tested;

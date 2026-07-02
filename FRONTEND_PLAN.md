@@ -402,7 +402,7 @@ feature, matching the C# records exactly.
 | i18n | **Transloco** (runtime en↔ar switch, lazy scopes) | Runtime culture switch without reload |
 | State | **Signals + feature services** (default). A store only if a feature proves it needs one (justified, not upfront) | Simplicity; Angular-native |
 | HTTP | Typed feature clients + functional interceptors + env-based base URL | Central contract handling |
-| Tests | **Jasmine + Karma** run headless on **Edge** (`CHROME_BIN`) | No Chrome on this box; Edge works |
+| Tests | **Vitest** (Angular `unit-test` builder) in jsdom | No browser needed; was Jasmine+Karma until the v22 migration |
 | Lint/format | ESLint (angular-eslint, strict) + Prettier | Production quality |
 
 > **AG Grid is *not* adopted.** TanStack covers every grid need here; AG Grid's enterprise features (and

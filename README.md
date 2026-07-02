@@ -5,7 +5,7 @@ A production Angular SPA for the Frame backend: multi-tenant identity & access m
 center) with runtime English↔Arabic localization and full light/dark × LTR/RTL theming.
 
 - **Stack:** Angular 22 (standalone components, signals, typed reactive forms, lazy routes via
-  `canMatch`), Tailwind CSS (TailAdmin tokens), Angular CDK, TanStack Table, Transloco, Jasmine/Karma.
+  `canMatch`), Tailwind CSS (TailAdmin tokens), Angular CDK, TanStack Table, Transloco, Vitest.
 - **No NgModules.** Every component is standalone; state is signals + feature services.
 
 See [`FRONTEND_PLAN.md`](./FRONTEND_PLAN.md) for the full backend inventory, architecture decisions,
@@ -36,18 +36,14 @@ npm install            # install dependencies
 npm start              # ng serve  → http://localhost:4200  (dev environment, watch)
 npm run build          # production build → dist/frame-portal (AOT, hashed, budget-checked)
 npm run lint           # ESLint (angular-eslint, strict) + Prettier rules
-npm test               # Karma unit tests (interactive)
+npm test               # Vitest unit tests (watch)
+npm run test:ci        # Vitest unit tests, single run
+npm run test:coverage  # single run + coverage; the thresholds in angular.json are the regression gate
 ```
 
-### Running tests headless (no Chrome on this box)
-
-Karma drives Microsoft Edge (Chromium) via `karma-chrome-launcher`. Point `CHROME_BIN` at Edge and use
-the no-sandbox headless launcher:
-
-```powershell
-$env:CHROME_BIN = (Get-Command msedge).Source
-npx ng test --watch=false --browsers=ChromeHeadlessNoSandbox
-```
+Unit tests run on **Vitest** (Angular's `unit-test` builder) in jsdom — no browser or `CHROME_BIN`
+setup needed. Coverage floors live in the `test` target of `angular.json` (`coverageThresholds`);
+the builder fails the run when a floor is missed. Ratchet them upward as coverage grows.
 
 ## Project structure
 

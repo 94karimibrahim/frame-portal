@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { provideHttpClient, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -30,22 +31,22 @@ function authResult(accessToken: string): AuthResult {
 describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
-  let tokens: jasmine.SpyObj<TokenStore>;
+  let tokens: MockedObject<TokenStore>;
   let refreshToken: string | null;
 
   const API = '/api';
 
   beforeEach(() => {
     refreshToken = null;
-    tokens = jasmine.createSpyObj<TokenStore>('TokenStore', [
-      'setTokens',
-      'setAccessToken',
-      'clear',
-      'getRefreshToken',
-      'hasRefreshToken',
-    ]);
-    tokens.getRefreshToken.and.callFake(() => refreshToken);
-    tokens.hasRefreshToken.and.callFake(() => refreshToken !== null);
+    tokens = {
+      setTokens: vi.fn().mockName('TokenStore.setTokens'),
+      setAccessToken: vi.fn().mockName('TokenStore.setAccessToken'),
+      clear: vi.fn().mockName('TokenStore.clear'),
+      getRefreshToken: vi.fn().mockName('TokenStore.getRefreshToken'),
+      hasRefreshToken: vi.fn().mockName('TokenStore.hasRefreshToken'),
+    } as unknown as MockedObject<TokenStore>;
+    tokens.getRefreshToken.mockImplementation(() => refreshToken);
+    tokens.hasRefreshToken.mockImplementation(() => refreshToken !== null);
 
     TestBed.configureTestingModule({
       providers: [
@@ -70,11 +71,11 @@ describe('AuthService', () => {
     httpMock.expectOne(`${API}/permissions/mine`).flush(envelope(['users.list']));
 
     expect(tokens.setTokens).toHaveBeenCalledWith(token, 'r1');
-    expect(service.isAuthenticated()).toBeTrue();
+    expect(service.isAuthenticated()).toBe(true);
     expect(service.identity()?.email).toBe('user@example.com');
     expect(service.identity()?.tenantId).toBe('t1');
-    expect(service.hasPermission('users.list')).toBeTrue();
-    expect(service.hasPermission('users.delete')).toBeFalse();
+    expect(service.hasPermission('users.list')).toBe(true);
+    expect(service.hasPermission('users.delete')).toBe(false);
   });
 
   it('treats a SuperAdmin as holding every permission', () => {
@@ -85,22 +86,22 @@ describe('AuthService', () => {
       .flush(envelope(authResult(jwt({ role: 'SuperAdmin' }))));
     httpMock.expectOne(`${API}/permissions/mine`).flush(envelope([]));
 
-    expect(service.isSuperAdmin()).toBeTrue();
-    expect(service.hasPermission('anything.at.all')).toBeTrue();
-    expect(service.hasAll(['a.b', 'c.d'])).toBeTrue();
+    expect(service.isSuperAdmin()).toBe(true);
+    expect(service.hasPermission('anything.at.all')).toBe(true);
+    expect(service.hasAll(['a.b', 'c.d'])).toBe(true);
   });
 
   it('clearSession wipes tokens, identity and permissions', () => {
     service.login({ email: 'user@example.com', password: 'secret12' }).subscribe();
     httpMock.expectOne(`${API}/auth/login`).flush(envelope(authResult(jwt({}))));
     httpMock.expectOne(`${API}/permissions/mine`).flush(envelope(['users.list']));
-    expect(service.isAuthenticated()).toBeTrue();
+    expect(service.isAuthenticated()).toBe(true);
 
     service.clearSession();
 
     expect(tokens.clear).toHaveBeenCalled();
-    expect(service.isAuthenticated()).toBeFalse();
-    expect(service.hasPermission('users.list')).toBeFalse();
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.hasPermission('users.list')).toBe(false);
   });
 
   it('refresh() errors (without a network call) when no refresh token is held', () => {
@@ -108,7 +109,7 @@ describe('AuthService', () => {
     let errored = false;
     service.refresh().subscribe({ error: () => (errored = true) });
 
-    expect(errored).toBeTrue();
+    expect(errored).toBe(true);
     httpMock.expectNone(`${API}/auth/refresh`);
   });
 
@@ -144,8 +145,8 @@ describe('AuthService', () => {
 
     // Never errors (bootstrap awaits it bare), and the dead token is dropped so the
     // next reload doesn't replay it.
-    expect(restored).toBeFalse();
+    expect(restored).toBe(false);
     expect(tokens.clear).toHaveBeenCalled();
-    expect(service.isAuthenticated()).toBeFalse();
+    expect(service.isAuthenticated()).toBe(false);
   });
 });

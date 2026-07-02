@@ -29,7 +29,7 @@ describe('TokenStore', () => {
 
     expect(store.getRefreshToken()).toBe('refresh');
     expect(sessionStorage.getItem(REFRESH_KEY)).toBe('refresh');
-    expect(store.hasRefreshToken()).toBeTrue();
+    expect(store.hasRefreshToken()).toBe(true);
   });
 
   it('recovers a refresh token left by a prior page load', () => {
@@ -38,7 +38,7 @@ describe('TokenStore', () => {
     const store = new TokenStore();
 
     expect(store.getRefreshToken()).toBe('survivor');
-    expect(store.hasRefreshToken()).toBeTrue();
+    expect(store.hasRefreshToken()).toBe(true);
   });
 
   it('replaces only the access token on setAccessToken (refresh untouched)', () => {
@@ -60,7 +60,7 @@ describe('TokenStore', () => {
 
     expect(store.getAccessToken()).toBeNull();
     expect(store.getRefreshToken()).toBeNull();
-    expect(store.hasRefreshToken()).toBeFalse();
+    expect(store.hasRefreshToken()).toBe(false);
     expect(sessionStorage.getItem(REFRESH_KEY)).toBeNull();
   });
 });

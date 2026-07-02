@@ -39,7 +39,7 @@ describe('authTenantInterceptor', () => {
 
     const req = httpMock.expectOne('/api/users');
     expect(req.request.headers.get('Authorization')).toBe('Bearer access-token');
-    expect(req.request.headers.has('X-Tenant')).toBeFalse();
+    expect(req.request.headers.has('X-Tenant')).toBe(false);
     expect(req.request.headers.get('Accept-Language')).toBe('ar');
     req.flush({});
   });
@@ -50,7 +50,7 @@ describe('authTenantInterceptor', () => {
 
     const req = httpMock.expectOne('/api/auth/login');
     expect(req.request.headers.get('X-Tenant')).toBe('acme');
-    expect(req.request.headers.has('Authorization')).toBeFalse();
+    expect(req.request.headers.has('Authorization')).toBe(false);
     req.flush({});
   });
 
@@ -59,9 +59,9 @@ describe('authTenantInterceptor', () => {
     http.get('/assets/logo.svg').subscribe();
 
     const req = httpMock.expectOne('/assets/logo.svg');
-    expect(req.request.headers.has('Authorization')).toBeFalse();
-    expect(req.request.headers.has('X-Tenant')).toBeFalse();
-    expect(req.request.headers.has('Accept-Language')).toBeFalse();
+    expect(req.request.headers.has('Authorization')).toBe(false);
+    expect(req.request.headers.has('X-Tenant')).toBe(false);
+    expect(req.request.headers.has('Accept-Language')).toBe(false);
     req.flush('');
   });
 });

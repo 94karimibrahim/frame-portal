@@ -1,3 +1,4 @@
+import type { Mock, MockedObject } from 'vitest';
 import { HttpClient, provideHttpClient, withInterceptors, withXhr } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -24,15 +25,20 @@ const authResult: AuthResult = {
 describe('refreshInterceptor', () => {
   let http: HttpClient;
   let httpMock: HttpTestingController;
-  let auth: jasmine.SpyObj<AuthService>;
-  let router: { navigate: jasmine.Spy };
+  let auth: MockedObject<AuthService>;
+  let router: {
+    navigate: Mock;
+  };
   let hasRefreshToken: boolean;
 
   function configure(refresh: Observable<AuthResult>): void {
     hasRefreshToken = true;
-    auth = jasmine.createSpyObj<AuthService>('AuthService', ['refresh', 'clearSession']);
-    auth.refresh.and.returnValue(refresh);
-    router = { navigate: jasmine.createSpy('navigate').and.resolveTo(true) };
+    auth = {
+      refresh: vi.fn().mockName('AuthService.refresh'),
+      clearSession: vi.fn().mockName('AuthService.clearSession'),
+    } as unknown as MockedObject<AuthService>;
+    auth.refresh.mockReturnValue(refresh);
+    router = { navigate: vi.fn().mockName('navigate').mockResolvedValue(true) };
 
     TestBed.configureTestingModule({
       providers: [
@@ -68,7 +74,7 @@ describe('refreshInterceptor', () => {
 
     httpMock.expectOne('/api/data').flush(null, { status: 401, statusText: 'Unauthorized' });
 
-    expect(errored).toBeTrue();
+    expect(errored).toBe(true);
     expect(auth.clearSession).toHaveBeenCalledTimes(1);
     expect(router.navigate).toHaveBeenCalledWith(['/auth/login'], {
       queryParams: { reason: 'session-expired' },
@@ -83,7 +89,7 @@ describe('refreshInterceptor', () => {
     httpMock.expectOne('/api/auth/login').flush(null, { status: 401, statusText: 'Unauthorized' });
 
     expect(auth.refresh).not.toHaveBeenCalled();
-    expect(errored).toBeTrue();
+    expect(errored).toBe(true);
   });
 
   it('does not refresh when no refresh token is held', () => {
@@ -95,7 +101,7 @@ describe('refreshInterceptor', () => {
     httpMock.expectOne('/api/data').flush(null, { status: 401, statusText: 'Unauthorized' });
 
     expect(auth.refresh).not.toHaveBeenCalled();
-    expect(errored).toBeTrue();
+    expect(errored).toBe(true);
   });
 
   it('retries every concurrent 401 once the shared refresh resolves', () => {
@@ -105,8 +111,16 @@ describe('refreshInterceptor', () => {
     configure(gate.asObservable());
 
     const done: string[] = [];
-    http.get<{ id: string }>('/api/a').subscribe((r) => done.push(r.id));
-    http.get<{ id: string }>('/api/b').subscribe((r) => done.push(r.id));
+    http
+      .get<{
+        id: string;
+      }>('/api/a')
+      .subscribe((r) => done.push(r.id));
+    http
+      .get<{
+        id: string;
+      }>('/api/b')
+      .subscribe((r) => done.push(r.id));
 
     // Both in-flight requests fail before the refresh resolves.
     httpMock.expectOne('/api/a').flush(null, { status: 401, statusText: 'Unauthorized' });

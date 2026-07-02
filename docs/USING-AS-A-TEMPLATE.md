@@ -103,7 +103,7 @@ the `delegations` item from the `nav.account` group). The command palette follow
 ### 3f. Verify
 
 ```bash
-npm run lint && npm run format:check && npm test && npm run build
+npm run lint && npm run format:check && npm run test:ci && npm run build
 ```
 
 The TypeScript compiler + `ng build` will flag any dangling import you missed — fix until green.

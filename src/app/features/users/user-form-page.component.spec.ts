@@ -1,3 +1,4 @@
+import type { MockedObject } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
@@ -47,8 +48,8 @@ describe('UserFormPageComponent', () => {
   let fixture: ComponentFixture<UserFormPageComponent>;
   let component: UserFormPageComponent;
   let api: FormApi;
-  let service: jasmine.SpyObj<UserService>;
-  let notify: jasmine.SpyObj<NotificationService>;
+  let service: MockedObject<UserService>;
+  let notify: MockedObject<NotificationService>;
   let router: Router;
 
   /**
@@ -56,9 +57,16 @@ describe('UserFormPageComponent', () => {
    * created but before the component is constructed (the constructor fetches immediately in edit mode).
    */
   function setup(id: string | null, arrange?: () => void): void {
-    service = jasmine.createSpyObj<UserService>('UserService', ['get', 'create', 'update']);
-    service.get.and.returnValue(of(existing));
-    notify = jasmine.createSpyObj<NotificationService>('NotificationService', ['success', 'error']);
+    service = {
+      get: vi.fn().mockName('UserService.get'),
+      create: vi.fn().mockName('UserService.create'),
+      update: vi.fn().mockName('UserService.update'),
+    } as unknown as MockedObject<UserService>;
+    service.get.mockReturnValue(of(existing));
+    notify = {
+      success: vi.fn().mockName('NotificationService.success'),
+      error: vi.fn().mockName('NotificationService.error'),
+    } as unknown as MockedObject<NotificationService>;
     arrange?.();
 
     TestBed.configureTestingModule({
@@ -78,7 +86,7 @@ describe('UserFormPageComponent', () => {
     component = fixture.componentInstance;
     api = component as unknown as FormApi;
     router = TestBed.inject(Router);
-    spyOn(router, 'navigate').and.resolveTo(true);
+    vi.spyOn(router, 'navigate').mockResolvedValue(true);
     fixture.detectChanges();
   }
 
@@ -93,7 +101,7 @@ describe('UserFormPageComponent', () => {
 
   it('create mode: trims values, posts, toasts, and returns to the list', () => {
     setup(null);
-    service.create.and.returnValue(of('new-id'));
+    service.create.mockReturnValue(of('new-id'));
     // Names are trimmed on submit; the email must already be clean or Validators.email blocks it.
     api.form.patchValue({
       firstName: '  Amina ',
@@ -104,7 +112,9 @@ describe('UserFormPageComponent', () => {
 
     api.submit();
 
-    expect(service.create).toHaveBeenCalledOnceWith({
+    expect(service.create).toHaveBeenCalledTimes(1);
+
+    expect(service.create).toHaveBeenCalledWith({
       firstName: 'Amina',
       lastName: 'Hassan',
       email: 'amina@example.com',
@@ -113,7 +123,7 @@ describe('UserFormPageComponent', () => {
     expect(notify.success).toHaveBeenCalled();
     expect(router.navigate).toHaveBeenCalledWith(['/users']);
     // The form was marked pristine before navigating, so the unsaved-changes guard lets it pass.
-    expect(component.hasUnsavedChanges()).toBeFalse();
+    expect(component.hasUnsavedChanges()).toBe(false);
   });
 
   it('edit mode: primes the form from the fetched user and disables email', () => {
@@ -121,22 +131,24 @@ describe('UserFormPageComponent', () => {
 
     expect(api.mode()).toBe('edit');
     expect(service.get).toHaveBeenCalledWith('u7');
-    expect(api.loading()).toBeFalse();
+    expect(api.loading()).toBe(false);
     expect(api.form.controls['firstName'].value).toBe('Amina');
-    expect(api.form.controls['email'].disabled).toBeTrue();
+    expect(api.form.controls['email'].disabled).toBe(true);
   });
 
   it('edit mode: submits the update (echoing avatarUrl) and returns to the list', () => {
     setup('u7');
-    service.update.and.returnValue(of(undefined));
+    service.update.mockReturnValue(of(undefined));
     api.form.patchValue({ lastName: 'Hassan-Ali' });
     api.form.markAsDirty();
 
     api.submit();
 
-    expect(service.update).toHaveBeenCalledOnceWith(
+    expect(service.update).toHaveBeenCalledTimes(1);
+
+    expect(service.update).toHaveBeenCalledWith(
       'u7',
-      jasmine.objectContaining({
+      expect.objectContaining({
         firstName: 'Amina',
         lastName: 'Hassan-Ali',
         phoneNumber: '+201000000000',
@@ -148,10 +160,10 @@ describe('UserFormPageComponent', () => {
   });
 
   it('edit mode: shows the error empty state when the record cannot be fetched', () => {
-    setup('missing', () => service.get.and.returnValue(throwError(() => new Error('404'))));
+    setup('missing', () => service.get.mockReturnValue(throwError(() => new Error('404'))));
 
     expect(api.user()).toBeNull();
-    expect(api.loading()).toBeFalse();
+    expect(api.loading()).toBe(false);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('users.detailError');
   });
 
@@ -165,7 +177,7 @@ describe('UserFormPageComponent', () => {
       retryAfterSeconds: null,
       correlationId: null,
     };
-    service.create.and.returnValue(throwError(() => err));
+    service.create.mockReturnValue(throwError(() => err));
     api.form.patchValue({ firstName: 'A', lastName: 'B', email: 'a@example.com' });
 
     api.submit();
@@ -175,26 +187,28 @@ describe('UserFormPageComponent', () => {
 
   it('reports unsaved changes only while dirty and not submitting', () => {
     setup(null);
-    expect(component.hasUnsavedChanges()).toBeFalse();
+    expect(component.hasUnsavedChanges()).toBe(false);
 
     api.form.markAsDirty();
-    expect(component.hasUnsavedChanges()).toBeTrue();
+    expect(component.hasUnsavedChanges()).toBe(true);
   });
 
   it('blocks a hard unload (refresh/close) only while edits are unsaved', () => {
     setup(null);
     // Call the handler directly: dispatching a real beforeunload on window makes the Karma client
     // believe the page is reloading and it disconnects the browser.
-    const handler = component as unknown as { onBeforeUnload(event: Event): void };
+    const handler = component as unknown as {
+      onBeforeUnload(event: Event): void;
+    };
     const unload = () => {
       const event = new Event('beforeunload', { cancelable: true });
       handler.onBeforeUnload(event);
       return event.defaultPrevented;
     };
 
-    expect(unload()).toBeFalse();
+    expect(unload()).toBe(false);
 
     api.form.markAsDirty();
-    expect(unload()).toBeTrue();
+    expect(unload()).toBe(true);
   });
 });

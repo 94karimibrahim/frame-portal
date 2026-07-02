@@ -19,9 +19,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     // Zoneless change detection: the app is 100% OnPush + signals, so nothing needs zone.js's
-    // monkey-patching. zone.js stays a dev-only test polyfill because the interceptor/auth specs
-    // use fakeAsync/tick (see angular.json's test polyfills); the Playwright suite exercises the
-    // real zoneless build.
+    // monkey-patching — the dependency is gone entirely (unit tests run zoneless under Vitest,
+    // using vi.useFakeTimers where the old specs used fakeAsync/tick).
     provideZonelessChangeDetection(),
     provideRouter(
       routes,

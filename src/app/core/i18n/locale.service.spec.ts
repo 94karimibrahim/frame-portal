@@ -24,13 +24,13 @@ describe('LocaleService', () => {
 
   it('defaults to English, left-to-right', () => {
     expect(service.culture()).toBe('en');
-    expect(service.isRtl()).toBeFalse();
+    expect(service.isRtl()).toBe(false);
     expect(service.dir()).toBe('ltr');
   });
 
   it('switches Arabic to RTL and reflects it on the document (RTL render check)', () => {
     service.setCulture('ar');
-    expect(service.isRtl()).toBeTrue();
+    expect(service.isRtl()).toBe(true);
     expect(service.dir()).toBe('rtl');
     expect(doc.documentElement.getAttribute('dir')).toBe('rtl');
     expect(doc.documentElement.getAttribute('lang')).toBe('ar');
