@@ -4,6 +4,10 @@
 **Method:** full static analysis plus live tooling runs — `ng lint`, `prettier --check`, production `ng build`,
 `ng test --code-coverage` (Edge headless), `npx playwright test`, `npm audit`, `npm outdated`.
 
+> **Status: CLOSED — every finding and follow-up is done.** The review below is the historical record;
+> the work landed the same day across the addenda that follow it. For the end state (Angular 22,
+> zoneless, Vitest, Tailwind 4, httpOnly-cookie auth) see **"Final state"** at the bottom.
+
 ---
 
 ## Executive Summary
@@ -100,9 +104,10 @@ the animations migration to native CSS.
   the query state, paged data, and optimistic mutations, with 13 unit specs of its own (incl. an M-2
   regression test); the component keeps dialogs/selection/navigation/CSV. Coverage floors ratcheted to
   63/64/54/56. A vestigial `deleting` signal (never set) was removed along the way.
-- **L-6 —** *Accepted residual:* refresh token in `sessionStorage` until the backend enables the
+- **L-6 —** ~~*Accepted residual:* refresh token in `sessionStorage` until the backend enables the
   httpOnly-cookie flow (README "Roadmap: Phase 2"). Revisit when backend CORS `AllowCredentials` lands —
-  and remember cookie auth reintroduces CSRF requirements.
+  and remember cookie auth reintroduces CSRF requirements.~~ **Done 2026-07-02** across both repos —
+  see the "L-6" addendum below.
 
 ---
 
@@ -117,10 +122,10 @@ the animations migration to native CSS.
 [x] Prefix-match isAuthEndpoint against apiBaseUrl                              (L-2)
 [x] Lint/format scope: e2e/ + tools/                                            (L-4)
 [x] Self-host Outfit (@fontsource); drop Google origins from the CSP            (L-5)
-[ ] Confirm backend isLockedOut/lockoutEnd contract, then commit the tree       (H-2)
+[x] Confirm backend isLockedOut/lockoutEnd contract, then commit the tree       (H-2) — Frame 8069cce ships the DTOs; client field stays optional-safe
 [x] Decide + execute the Angular 21 / version-currency policy                   (M-3) — see addendum
 [x] Optional: users-page facade                                                 (L-3) — users-page.store.ts
-[ ] Phase 2 (backend-gated): httpOnly-cookie refresh + CSRF posture             (L-6)
+[x] Phase 2 (backend-gated): httpOnly-cookie refresh + CSRF posture             (L-6) — see addendum
 ```
 
 ---
@@ -234,9 +239,63 @@ provides it, so it is now a **direct devDependency** (`@eslint/js` 10.0.1, versi
 eslint itself since 10.0). The Dependabot semver-major ignore for eslint stays — the next major is
 manual again, together with whatever the typescript-eslint/angular-eslint matrix requires then.
 
+## Addendum — 2026-07-02: fetch backend
+
+`withXhr()` (the v22 migration's behavior-preserving pin) removed from `core.providers.ts` and the four
+specs it touched — `HttpClient` now rides Angular 22's default **fetch** backend. Nothing needed
+XHR-only features; the interceptor chain is transport-agnostic. Verified end to end (unit, e2e through
+all three interceptors, build); tree-shaking the XHR backend brought the bundle under both round
+numbers: **399.73 kB raw / 99.85 kB transfer**.
+
+## Addendum — 2026-07-02: L-6 — httpOnly-cookie refresh (both repos)
+
+The review's last accepted residual — the refresh token in `sessionStorage`, readable by a successful
+XSS — is gone. Cross-repo change, verified by both CI pipelines:
+
+- **Backend** (`Frame` repo): `8069cce` ships the `isLockedOut`/`lockoutEnd` user-DTO contract
+  (closing H-2's open question for real — the client's optional-field defense is now just
+  belt-and-braces). `908f0d3` adds `Auth:RefreshCookie:Enabled` (on in Development, off by default):
+  token-issuing endpoints set `frame_refresh` — `HttpOnly; Secure; SameSite=Strict; Path=/api/auth`,
+  stamped with the token's own expiry — and **redact `refreshToken` from the body**; `/auth/refresh`
+  takes body **or** cookie (non-browser clients unchanged) and deletes a dead cookie on failure;
+  `/auth/logout` clears it; CORS pairs explicit origins with `AllowCredentials()`. CSRF posture:
+  SameSite=Strict + the path scope + a JSON-only endpoint (forms can't send `application/json`;
+  cross-origin fetch fails the preflight). Three integration tests cover the cookie contract.
+  `3042470` fixes suite fallout: the new tests pushed the shared TestServer partition past the
+  production auth rate budget (10/5 min) and 429'd unrelated tests — the test host now gets headroom
+  (the limiter has its own direct tests).
+- **Client** (`ceca22e`): `TokenStore` is dual-mode per response — an empty body token (cookie mode)
+  stores nothing and leaves a non-sensitive `localStorage` session hint so `restoreSession()` knows a
+  reload is worth one `/auth/refresh`; a new `credentialsInterceptor` sends `withCredentials` on
+  `/auth/*` calls only. Legacy body-token backends keep working unchanged. +10 specs (suite: 100).
+
+---
+
+## Final state (end of 2026-07-02) — review CLOSED
+
+Everything above is done: the original punch list, both optional items, the backend-gated Phase 2, and
+every follow-up discovered along the way. The stack moved two framework majors during the day, with
+each step verified (lint · warning-free build · unit + enforced coverage floors · e2e · CI) before merge.
+
+| Dimension | Was (review) | Now |
+|---|---|---|
+| Angular | 20.3 | **22.0.5** (TS 6.0.3, Node ≥ 22.22 baseline, fetch HttpClient) |
+| Change detection | zone.js | **Zoneless** — zone.js absent from the repository entirely |
+| Animations | @angular/animations (deprecated) | **Native CSS** (view transitions + `animate.enter`/`leave`) |
+| Styling | Tailwind 3.4 (JS config) | **Tailwind 4.3** (CSS-first `@theme`; compat layer removed after audit) |
+| Unit tests | 76, Karma/Jasmine, Edge headless | **100, Vitest/jsdom**, native coverage thresholds (67% stmts, floors 63/56/54/64) |
+| Lint stack | eslint 9 | **eslint 10** + angular-eslint 22 + typescript-eslint 8.62 |
+| Initial bundle | 460 kB raw / 128 kB transfer | **400 kB raw / 99.97 kB transfer** (−13% / −22%) |
+| Refresh token | `sessionStorage` (accepted residual) | **httpOnly Secure SameSite=Strict cookie** — JS holds nothing exfiltratable |
+| Version currency | ad-hoc | **Policy in USING-AS-A-TEMPLATE §6, enforced by Dependabot ignore rules** |
+| Flagship page | 980-line component | **Component + `users-page.store.ts`** (the documented page-store pattern) |
+
+Scorecard deltas: Testing **B+ → A** (Vitest, +24 tests over previously untested logic, enforced
+floors); Config & Tooling **A− → A** (policy written and config-enforced); Scalability **A− → A**
+(store pattern extracted and documented); Security **A**, now without its one accepted residual.
+
 ## Final Verdict
 
-**Ready, pending H-2.** Architecturally there is nothing to refactor; the security-critical core is tested;
-CI enforces lint, formatting, tests, a coverage ratchet, and the production build; the e2e suite now covers
-both the anonymous and the authenticated (mocked) surface. Commit the tree, decide the upgrade policy, and
-bless it.
+**Blessed.** Nothing is open in either repository; both CI pipelines are green on the final commits
+(`ceca22e` client, `3042470` backend). Use it as the starter — and keep it current via the §6 policy,
+which this very upgrade cycle was the first exercise of.
