@@ -1,21 +1,23 @@
 import { Injectable } from '@angular/core';
 
 /**
- * The single place tokens are held — the one file to change if/when the backend gains
- * `AllowCredentials` + an httpOnly refresh cookie (then the refresh token leaves the JS entirely).
+ * The single place tokens are held. Two modes, decided per response by what the backend sends:
  *
- * Approved strategy (see FRONTEND_PLAN §20):
- * - **Access token: in memory only.** Never persisted, so it cannot be read from disk/storage.
- * - **Refresh token: in memory + a `sessionStorage` mirror** so a full page reload can recover the
- *   session within the same tab. `sessionStorage` (not `localStorage`) is per-tab and cleared when the
- *   tab closes, narrowing exposure. The mirror is removed on logout.
+ * - **Cookie mode** (backend `Auth:RefreshCookie:Enabled`, the SPA default): the response body's
+ *   `refreshToken` is empty because the real one rides an httpOnly, Secure, SameSite=Strict cookie
+ *   scoped to `/api/auth` — JS never sees it. Only the access token is held (in memory), plus a
+ *   non-sensitive `localStorage` hint that a cookie session exists, so a later bootstrap knows a
+ *   restore attempt is worth one `/auth/refresh` round-trip.
+ * - **Legacy body mode** (non-cookie backends): access token in memory; refresh token in memory +
+ *   a `sessionStorage` mirror so a reload within the tab can recover the session (per-tab, cleared
+ *   when the tab closes). The mirror is removed on logout.
  *
- * Rationale for not using a cookie today: the API returns both tokens in the response body and its CORS
- * policy does not set `AllowCredentials`, so a cross-origin httpOnly cookie is not currently accepted.
+ * The access token is never persisted in either mode, so it cannot be read from disk/storage.
  */
 @Injectable({ providedIn: 'root' })
 export class TokenStore {
   private static readonly REFRESH_KEY = 'frame.rt';
+  private static readonly SESSION_HINT_KEY = 'frame.session';
 
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
@@ -33,11 +35,21 @@ export class TokenStore {
     return this.refreshToken;
   }
 
-  /** Stores a freshly issued token pair (after login / refresh rotation). */
+  /**
+   * Stores a freshly issued token pair (after login / refresh rotation). An empty `refreshToken`
+   * means the backend runs in cookie mode — nothing to hold; leave the session hint instead.
+   */
   setTokens(accessToken: string, refreshToken: string): void {
     this.accessToken = accessToken;
-    this.refreshToken = refreshToken;
-    this.writeSession(refreshToken);
+    if (refreshToken) {
+      this.refreshToken = refreshToken;
+      this.writeSession(refreshToken);
+      return;
+    }
+    this.refreshToken = null;
+    this.tryStorage(() => sessionStorage.removeItem(TokenStore.REFRESH_KEY));
+    // localStorage (not sessionStorage): the cookie outlives the tab, so any new tab may restore.
+    this.tryStorage(() => localStorage.setItem(TokenStore.SESSION_HINT_KEY, '1'));
   }
 
   /** Replaces only the access token (e.g. after super-admin tenant switch). */
@@ -45,20 +57,33 @@ export class TokenStore {
     this.accessToken = accessToken;
   }
 
-  /** Wipes all token state from memory and the session mirror (logout / auth failure). */
+  /** Wipes all token state from memory and both storage mirrors (logout / auth failure). */
   clear(): void {
     this.accessToken = null;
     this.refreshToken = null;
-    try {
-      sessionStorage.removeItem(TokenStore.REFRESH_KEY);
-    } catch {
-      // Storage may be unavailable (private mode / disabled); in-memory clear already happened.
-    }
+    this.tryStorage(() => sessionStorage.removeItem(TokenStore.REFRESH_KEY));
+    this.tryStorage(() => localStorage.removeItem(TokenStore.SESSION_HINT_KEY));
   }
 
-  /** True when a refresh token exists, so the app can attempt to restore a session after reload. */
+  /** True when a refresh token exists in JS (legacy body mode only). */
   hasRefreshToken(): boolean {
     return !!this.refreshToken;
+  }
+
+  /**
+   * True when a session may be restorable after a reload: a body-mode refresh token survived, or a
+   * cookie-mode session left its hint. A stale hint (revoked cookie) just costs one failed refresh
+   * at bootstrap, which clears it.
+   */
+  hasSession(): boolean {
+    if (this.hasRefreshToken()) {
+      return true;
+    }
+    try {
+      return localStorage.getItem(TokenStore.SESSION_HINT_KEY) === '1';
+    } catch {
+      return false;
+    }
   }
 
   private readSession(): string | null {
@@ -70,10 +95,15 @@ export class TokenStore {
   }
 
   private writeSession(refreshToken: string): void {
+    this.tryStorage(() => sessionStorage.setItem(TokenStore.REFRESH_KEY, refreshToken));
+  }
+
+  /** Storage may be unavailable (private mode / disabled); in-memory state is authoritative anyway. */
+  private tryStorage(op: () => void): void {
     try {
-      sessionStorage.setItem(TokenStore.REFRESH_KEY, refreshToken);
+      op();
     } catch {
-      // Non-fatal: the in-memory copy still works for this page lifetime.
+      // Non-fatal by design.
     }
   }
 }

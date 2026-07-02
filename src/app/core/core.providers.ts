@@ -7,6 +7,7 @@ import { LocaleService } from './i18n/locale.service';
 import { ThemeService } from './theme/theme.service';
 import { provideAppTransloco } from './i18n/transloco.providers';
 import { authTenantInterceptor } from './interceptors/auth-tenant.interceptor';
+import { credentialsInterceptor } from './interceptors/credentials.interceptor';
 import { refreshInterceptor } from './interceptors/refresh.interceptor';
 import { errorInterceptor } from './interceptors/error.interceptor';
 
@@ -20,7 +21,12 @@ export function provideCore(): (Provider | EnvironmentProviders)[] {
     // HttpClient rides Angular 22's default fetch backend (the v22 migration briefly pinned the old
     // XHR transport via withXhr(); nothing here needs XHR-only features like progress events).
     provideHttpClient(
-      withInterceptors([errorInterceptor, refreshInterceptor, authTenantInterceptor]),
+      withInterceptors([
+        errorInterceptor,
+        refreshInterceptor,
+        authTenantInterceptor,
+        credentialsInterceptor,
+      ]),
     ),
     ...provideAppTransloco(),
     provideAppInitializer(async () => {

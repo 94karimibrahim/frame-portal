@@ -17,10 +17,10 @@ function envelope<T>(data: T): ApiResponse<T> {
   return { data, success: true, message: null, correlationId: null };
 }
 
-function authResult(accessToken: string): AuthResult {
+function authResult(accessToken: string, refreshToken = 'r1'): AuthResult {
   return {
     accessToken,
-    refreshToken: 'r1',
+    refreshToken,
     refreshTokenExpiresAt: '2099-01-01T00:00:00Z',
     userId: 'u1',
     email: 'user@example.com',
@@ -33,20 +33,24 @@ describe('AuthService', () => {
   let httpMock: HttpTestingController;
   let tokens: MockedObject<TokenStore>;
   let refreshToken: string | null;
+  let cookieSessionHint: boolean;
 
   const API = '/api';
 
   beforeEach(() => {
     refreshToken = null;
+    cookieSessionHint = false;
     tokens = {
       setTokens: vi.fn().mockName('TokenStore.setTokens'),
       setAccessToken: vi.fn().mockName('TokenStore.setAccessToken'),
       clear: vi.fn().mockName('TokenStore.clear'),
       getRefreshToken: vi.fn().mockName('TokenStore.getRefreshToken'),
       hasRefreshToken: vi.fn().mockName('TokenStore.hasRefreshToken'),
+      hasSession: vi.fn().mockName('TokenStore.hasSession'),
     } as unknown as MockedObject<TokenStore>;
     tokens.getRefreshToken.mockImplementation(() => refreshToken);
     tokens.hasRefreshToken.mockImplementation(() => refreshToken !== null);
+    tokens.hasSession.mockImplementation(() => refreshToken !== null || cookieSessionHint);
 
     TestBed.configureTestingModule({
       providers: [
@@ -148,5 +152,47 @@ describe('AuthService', () => {
     expect(restored).toBe(false);
     expect(tokens.clear).toHaveBeenCalled();
     expect(service.isAuthenticated()).toBe(false);
+  });
+
+  // ── Cookie mode: the refresh token rides an httpOnly cookie; JS holds no token, only a hint ────
+
+  it('refresh() in cookie mode posts an empty body token (the cookie carries the real one)', () => {
+    refreshToken = null;
+    cookieSessionHint = true;
+    service.refresh().subscribe();
+
+    const req = httpMock.expectOne(`${API}/auth/refresh`);
+    expect(req.request.body).toEqual({ refreshToken: '' });
+    // Cookie mode responses redact the body token; the store receives the empty marker.
+    req.flush(envelope(authResult(jwt({}), '')));
+
+    expect(tokens.setTokens).toHaveBeenCalledWith(expect.any(String), '');
+  });
+
+  it('restoreSession() attempts a cookie restore when only the session hint exists', () => {
+    refreshToken = null;
+    cookieSessionHint = true;
+    let restored: boolean | undefined;
+    service.restoreSession().subscribe((ok) => (restored = ok));
+
+    httpMock.expectOne(`${API}/auth/refresh`).flush(envelope(authResult(jwt({}), '')));
+    httpMock.expectOne(`${API}/permissions/mine`).flush(envelope(['users.list']));
+
+    expect(restored).toBe(true);
+    expect(service.isAuthenticated()).toBe(true);
+  });
+
+  it('restoreSession() clears a stale hint when the cookie is dead', () => {
+    refreshToken = null;
+    cookieSessionHint = true;
+    let restored: boolean | undefined;
+    service.restoreSession().subscribe((ok) => (restored = ok));
+
+    httpMock
+      .expectOne(`${API}/auth/refresh`)
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    expect(restored).toBe(false);
+    expect(tokens.clear).toHaveBeenCalled();
   });
 });

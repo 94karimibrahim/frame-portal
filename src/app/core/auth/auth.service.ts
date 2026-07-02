@@ -115,8 +115,10 @@ export class AuthService {
     if (this.inFlightRefresh) {
       return this.inFlightRefresh;
     }
-    const refreshToken = this.tokens.getRefreshToken();
-    if (!refreshToken) {
+    // Cookie mode sends an empty body token — the httpOnly cookie (attached by the credentials
+    // interceptor) carries the real one and the backend prefers a non-empty body when given.
+    const refreshToken = this.tokens.getRefreshToken() ?? '';
+    if (!refreshToken && !this.tokens.hasSession()) {
       return throwError(() => new Error('No refresh token'));
     }
     this.inFlightRefresh = this.api.post<AuthResult>('/auth/refresh', { refreshToken }).pipe(
@@ -136,7 +138,7 @@ export class AuthService {
    * restored, so the app simply shows the login page.
    */
   restoreSession(): Observable<boolean> {
-    if (!this.tokens.hasRefreshToken()) {
+    if (!this.tokens.hasSession()) {
       return of(false);
     }
     return this.refresh().pipe(

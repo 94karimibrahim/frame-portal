@@ -1,15 +1,23 @@
 import { TokenStore } from './token-store.service';
 
 const REFRESH_KEY = 'frame.rt';
+const HINT_KEY = 'frame.session';
 
 /**
  * `TokenStore` has no Angular dependencies, so it's exercised directly (no TestBed). These tests pin the
- * template's token-storage contract: the access token is never persisted, the refresh token is mirrored to
- * `sessionStorage` (and recovered on construction), and `clear()` wipes both.
+ * template's token-storage contract: the access token is never persisted; in body mode the refresh token
+ * is mirrored to `sessionStorage` (and recovered on construction); in cookie mode (empty refresh token)
+ * only a non-sensitive session hint is left in `localStorage`; and `clear()` wipes everything.
  */
 describe('TokenStore', () => {
-  beforeEach(() => sessionStorage.clear());
-  afterEach(() => sessionStorage.clear());
+  beforeEach(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+  });
+  afterEach(() => {
+    sessionStorage.clear();
+    localStorage.clear();
+  });
 
   it('never persists the access token', () => {
     const store = new TokenStore();
@@ -62,5 +70,47 @@ describe('TokenStore', () => {
     expect(store.getRefreshToken()).toBeNull();
     expect(store.hasRefreshToken()).toBe(false);
     expect(sessionStorage.getItem(REFRESH_KEY)).toBeNull();
+  });
+
+  it('cookie mode (empty refresh token) stores no token, only the session hint', () => {
+    const store = new TokenStore();
+    store.setTokens('access', '');
+
+    expect(store.getAccessToken()).toBe('access');
+    expect(store.getRefreshToken()).toBeNull();
+    expect(store.hasRefreshToken()).toBe(false);
+    expect(store.hasSession()).toBe(true);
+    expect(sessionStorage.getItem(REFRESH_KEY)).toBeNull();
+    expect(localStorage.getItem(HINT_KEY)).toBe('1');
+  });
+
+  it('a cookie-mode rotation clears a leftover body-mode mirror', () => {
+    const store = new TokenStore();
+    store.setTokens('access', 'legacy-refresh');
+
+    store.setTokens('access-2', '');
+
+    expect(sessionStorage.getItem(REFRESH_KEY)).toBeNull();
+    expect(store.getRefreshToken()).toBeNull();
+    expect(store.hasSession()).toBe(true);
+  });
+
+  it('hasSession() reports the hint left by a prior cookie-mode login', () => {
+    localStorage.setItem(HINT_KEY, '1');
+
+    const store = new TokenStore();
+
+    expect(store.hasRefreshToken()).toBe(false);
+    expect(store.hasSession()).toBe(true);
+  });
+
+  it('clear() removes the session hint too', () => {
+    const store = new TokenStore();
+    store.setTokens('access', '');
+
+    store.clear();
+
+    expect(store.hasSession()).toBe(false);
+    expect(localStorage.getItem(HINT_KEY)).toBeNull();
   });
 });

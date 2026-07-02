@@ -86,9 +86,11 @@ Every feature route is **lazy** (`loadComponent`/`loadChildren`) and guarded by 
 
 ## Security model
 
-- **Tokens:** the access token lives **in memory**; the refresh token sits behind a single `TokenStore`
-  abstraction (in-memory + a `sessionStorage` mirror for reload survival — never `localStorage`). Swapping
-  to an httpOnly cookie later is a one-file change once the backend enables `AllowCredentials` + `Set-Cookie`.
+- **Tokens:** the access token lives **in memory**, never persisted. The refresh token, in cookie mode
+  (the backend's `Auth:RefreshCookie:Enabled`, on by default in dev), lives in an **httpOnly, Secure,
+  SameSite=Strict cookie** scoped to `/api/auth` — JS never sees it; only a non-sensitive session hint is
+  kept so reloads know to attempt a restore. Against non-cookie backends, `TokenStore` falls back to the
+  legacy in-memory + `sessionStorage`-mirror flow automatically (decided per response).
 - **Refresh:** a single-flight interceptor rotates the token pair on `401`; refresh failure / session
   revocation triggers auto-logout and a redirect to login.
 - **Tenant isolation:** a normal user's `X-Tenant` header may never differ from their token tenant
@@ -97,20 +99,21 @@ Every feature route is **lazy** (`loadComponent`/`loadChildren`) and guarded by 
 - **XSS:** rely on Angular's sanitization; no `bypassSecurityTrust*` and no untrusted `innerHTML`.
 - No secrets in the client — only public config in `src/environments/*`.
 
-### Roadmap: httpOnly-cookie refresh (Phase 2)
+### httpOnly-cookie refresh (Phase 2 — done)
 
-The one residual token-theft surface today is the refresh token in `sessionStorage` — readable by any
-successful XSS payload (the strict CSP above is the compensating control). Closing it is a deliberately
-small, isolated change, all behind `TokenStore` (`core/auth/token-store.service.ts`):
+With cookie mode on (the default pairing with the Frame backend), the JS holds nothing an XSS could
+exfiltrate for long-lived reuse: the access token is in memory only, and the refresh token is an
+httpOnly cookie the script cannot read. The pieces:
 
-1. Backend: on login/refresh, set the refresh token as an `HttpOnly; Secure; SameSite` cookie (instead of
-   in the JSON body) and enable `AllowCredentials` on CORS / read it from the cookie on `/auth/refresh`.
-2. Client: send credentialed requests (`withCredentials: true`) and **stop** persisting the refresh token —
-   `TokenStore` keeps only the in-memory access token; `restoreSession()` calls `/auth/refresh` (the
-   browser attaches the cookie) on reload. No component or interceptor outside `TokenStore` changes.
-
-The access token already lives in memory only, so after this the JS holds nothing an XSS could exfiltrate
-for long-lived reuse.
+- **Backend** (`Auth:RefreshCookie:Enabled`): token-issuing endpoints set the `frame_refresh` cookie
+  (`HttpOnly; Secure; SameSite=Strict; Path=/api/auth`) and redact `refreshToken` from the body;
+  `/auth/refresh` reads the cookie when the body token is empty; `/auth/logout` clears it; CORS pairs
+  explicit origins with `AllowCredentials`. CSRF posture: SameSite=Strict + the path scope + a JSON-only
+  endpoint (forms can't send `application/json`; cross-origin fetch fails the preflight).
+- **Client**: `credentialsInterceptor` sends `withCredentials` on `/auth/*` calls only; `TokenStore`
+  keeps a `localStorage` session hint (non-sensitive) so `restoreSession()` knows a cookie session is
+  worth one `/auth/refresh` attempt after a reload. The legacy body-token flow still works against
+  backends without cookie mode — the store picks the mode per response.
 
 ## Deployment & security headers
 
